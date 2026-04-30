@@ -43,11 +43,6 @@ class SoftwareLayerVisualizer {
                 example: 'Der Linux-Kernel ist der Kern von Linux, Android und Chrome OS.'
             },
             {
-                term: 'Von-Neumann-Architektur',
-                definition: 'Ein grundlegendes Bauprinzip für Computer, das 1945 von John von Neumann beschrieben wurde. Es besagt, dass Programm und Daten gemeinsam im Arbeitsspeicher liegen und der Prozessor sie nacheinander abarbeitet.',
-                example: 'Fast alle heutigen Computer - ob PC, Laptop oder Smartphone - arbeiten nach der Von-Neumann-Architektur.'
-            },
-            {
                 term: 'Prozessor (CPU)',
                 definition: 'Die Central Processing Unit (CPU) ist das Rechenwerk und Steuerwerk des Computers in einem Bauteil. Sie führt alle Berechnungen durch und steuert den Ablauf der Programme.',
                 example: 'Beispiele: Intel Core i7, AMD Ryzen 5, Apple M2'
@@ -56,16 +51,6 @@ class SoftwareLayerVisualizer {
                 term: 'Arbeitsspeicher (RAM)',
                 definition: 'Der Random Access Memory (RAM) ist der schnelle Zwischenspeicher des Computers. Er speichert die Daten und Programme, die gerade benutzt werden. Beim Ausschalten gehen alle Inhalte verloren (flüchtig).',
                 example: 'Typische Größen: 8 GB oder 16 GB RAM in modernen Computern.'
-            },
-            {
-                term: 'EVA-Prinzip',
-                definition: 'Das EVA-Prinzip beschreibt die grundlegende Arbeitsweise eines Computers: Eingabe → Verarbeitung → Ausgabe. Daten werden eingegeben, vom Prozessor verarbeitet und das Ergebnis wird ausgegeben.',
-                example: 'Tastatur (Eingabe) → CPU berechnet (Verarbeitung) → Bildschirm zeigt an (Ausgabe)'
-            },
-            {
-                term: 'Bus-System',
-                definition: 'Das Bus-System sind die Leitungen, über die Daten, Adressen und Steuersignale zwischen den Bauteilen eines Computers transportiert werden. Es gibt den Datenbus, den Adressbus und den Steuerbus.',
-                example: 'Der Datenbus transportiert die eigentlichen Daten, der Adressbus gibt an wohin, und der Steuerbus regelt das Wann und Wie.'
             }
         ];
 
@@ -100,25 +85,25 @@ class SoftwareLayerVisualizer {
         // ===== MISSION DEFINITIONS =====
         this.missions = [
             {
-                title: '� Satzteile verbinden',
+                title: '🔗 Begriffe verbinden',
                 text: 'Verbinde die zusammengehörenden Satzteile korrekt! Klicke zuerst auf einen <strong>Satzanfang</strong> (links) und dann auf das passende <strong>Satzende</strong> (rechts).',
                 format: 'matching',
                 data: {
                     pairs: [
-                        { left: 'Das Herzstück des Computers ist', right: 'der Prozessor.' },
-                        { left: 'Die Größe des Bildschirms wird', right: 'in Zoll angegeben.' },
-                        { left: 'Der Scanner ist ein Gerät', right: 'zum Digitalisieren von Fotos.' },
-                        { left: 'Die Größe einer Datei wird', right: 'auch in Kilobyte angegeben.' },
-                        { left: 'Die Arbeitsweise des Computers erfolgt', right: 'nach dem EVA-Prinzip.' },
-                        { left: 'Das Betriebssystem iOS ist', right: 'für Apple Produkte.' }
+                        { left: 'Windows ist', right: 'ein Betriebssystem.' },
+                        { left: 'Spotify ist', right: 'eine Anwendersoftware.' },
+                        { left: 'Ein Druckertreiber ist', right: 'ein Übersetzer zwischen Betriebssystem und Drucker.' },
+                        { left: 'Eine Maus gehört zur', right: 'Hardware.' },
+                        { left: 'Ohne Betriebssystem lässt sich', right: 'keine Anwendersoftware starten.' },
+                        { left: 'USB und HDMI sind', right: 'Schnittstellen am Computer.' }
                     ]
                 },
                 check: () => this._matchingCorrect,
-                success: 'Ausgezeichnet! Du hast alle Satzteile korrekt verbunden und kennst dich mit den Grundlagen der Computertechnik bestens aus!',
+                success: 'Stark! Du hast wichtige Begriffe rund um Hard- und Software korrekt verbunden.',
                 timer: 5
             },
             {
-                title: '�🔍 Entdecke die Schichten',
+                title: '🔍 Entdecke die Schichten',
                 text: 'Willkommen! Klicke oben im <strong>Schichtenmodell</strong> auf jede der vier Schichten und lies dir die Erklärungen durch. Sobald du alle vier Schichten entdeckt hast, ist die Mission geschafft!',
                 format: 'exploration',
                 check: () => this.exploredLayers.size >= 4,
@@ -155,7 +140,7 @@ class SoftwareLayerVisualizer {
             },
             {
                 title: '✅ Richtig oder Falsch?',
-                text: 'Entscheide bei jeder Aussage, ob sie <strong>richtig</strong> oder <strong>falsch</strong> ist. Du brauchst mindestens <strong>5 von 6</strong> richtig.',
+                text: 'Entscheide bei jeder Aussage, ob sie <strong>richtig</strong> oder <strong>falsch</strong> ist. Du brauchst mindestens <strong>6 von 8</strong> richtig.',
                 format: 'truefalse',
                 data: [
                     { statement: 'Ein Treiber ist ein Programm, das die Kommunikation zwischen Hardware und Betriebssystem ermöglicht.', answer: true, explanation: 'Der Treiber übersetzt zwischen Hardware-Gerät und Betriebssystem.' },
@@ -164,29 +149,29 @@ class SoftwareLayerVisualizer {
                     { statement: 'Ein Drucker funktioniert auch ohne Treiber ganz normal.', answer: false, explanation: 'Ohne den passenden Treiber kann das Betriebssystem nicht mit dem Drucker kommunizieren.' },
                     { statement: 'Android ist ein Betriebssystem für Smartphones.', answer: true, explanation: 'Android ist das am weitesten verbreitete Smartphone-Betriebssystem.' },
                     { statement: 'Ein Treiber ist eine Anwendersoftware, die man im App-Store kauft.', answer: false, explanation: 'Treiber sind Systemsoftware und werden meist vom Hersteller der Hardware mitgeliefert oder automatisch installiert.' },
-                    { statement: 'Beim Von-Neumann-Rechner liegen Programme und Daten gemeinsam im Arbeitsspeicher.', answer: true, explanation: 'Das ist das zentrale Merkmal der Von-Neumann-Architektur.' },
-                    { statement: 'Das Bus-System verbindet alle Komponenten eines Computers miteinander.', answer: true, explanation: 'Das Bus-System transportiert Daten, Adressen und Steuersignale zwischen CPU, Speicher und Ein-/Ausgabegeräten.' }
+                    { statement: 'Eine Grafikkarte gehört zur Hardware.', answer: true, explanation: 'Die Grafikkarte ist ein physisches Bauteil des Computers und damit Hardware.' },
+                    { statement: 'Treiber werden nur für Drucker benötigt.', answer: false, explanation: 'Auch Grafikkarten, Soundkarten, Netzwerkkarten und viele andere Geräte benötigen passende Treiber.' }
                 ],
                 threshold: 6,
                 check: () => this._tfScore >= 6,
-                success: 'Stark! Du hast die wichtigsten Fakten über Software-Schichten und den Von-Neumann-Rechner verstanden.',
+                success: 'Stark! Du hast die wichtigsten Fakten über Hard- und Software verstanden.',
                 timer: 4
             },
             {
-                title: '🖥️ Von-Neumann-Rechner',
-                text: 'Ordne die Komponenten des Von-Neumann-Rechnermodells ihrer <strong>Beschreibung</strong> zu! Klicke zuerst auf eine <strong>Komponente</strong> (links) und dann auf die passende <strong>Beschreibung</strong> (rechts).',
+                title: '🧩 Beispiele zuordnen',
+                text: 'Ordne die Beispiele der passenden <strong>Kategorie</strong> zu! Klicke zuerst auf ein <strong>Beispiel</strong> (links) und dann auf die passende <strong>Beschreibung</strong> (rechts).',
                 format: 'matching',
                 data: {
                     pairs: [
-                        { left: 'Prozessor (CPU)', right: 'führt Berechnungen durch und steuert alle Abläufe.' },
-                        { left: 'Arbeitsspeicher (RAM)', right: 'speichert Programme und Daten gemeinsam (flüchtig).' },
-                        { left: 'Eingabewerk', right: 'nimmt Daten von außen entgegen (z.\u00a0B. Tastatur).' },
-                        { left: 'Ausgabewerk', right: 'gibt Ergebnisse aus (z.\u00a0B. Bildschirm).' },
-                        { left: 'Bus-System', right: 'transportiert Daten zwischen den Bauteilen.' }
+                        { left: 'Android', right: 'ist ein Betriebssystem.' },
+                        { left: 'Grafikkartentreiber', right: 'ist ein Treiber.' },
+                        { left: 'Minecraft', right: 'ist eine Anwendersoftware.' },
+                        { left: 'Tastatur', right: 'ist Hardware.' },
+                        { left: 'HDMI', right: 'ist eine Schnittstelle.' }
                     ]
                 },
                 check: () => this._matchingCorrect,
-                success: 'Super! Du kennst die fünf Komponenten des Von-Neumann-Rechnermodells und ihre Aufgaben!',
+                success: 'Super! Du kannst typische Beispiele jetzt sicher den richtigen Bereichen zuordnen.',
                 timer: 5
             },
             {
@@ -242,10 +227,10 @@ class SoftwareLayerVisualizer {
                         explanation: 'Der Treiber ist der Übersetzer zwischen Hardware und Betriebssystem.'
                     },
                     {
-                        question: 'Was ist die Besonderheit der Von-Neumann-Architektur?',
-                        options: ['Programme und Daten liegen in getrennten Speichern', 'Programme und Daten teilen sich denselben Arbeitsspeicher', 'Der Computer hat keinen Arbeitsspeicher', 'Der Prozessor arbeitet ohne Bus-System'],
-                        correct: 1,
-                        explanation: 'Bei der Von-Neumann-Architektur liegen Programme und Daten gemeinsam im Arbeitsspeicher - das ist ihr zentrales Merkmal.'
+                        question: 'Warum braucht eine App wie Word das Betriebssystem?',
+                        options: ['Weil das Betriebssystem Hardware, Dateien und Programmstarts verwaltet', 'Weil das Betriebssystem den Monitor baut', 'Weil das Betriebssystem die Maus ersetzt', 'Weil das Betriebssystem das Internet speichert'],
+                        correct: 0,
+                        explanation: 'Anwendersoftware nutzt die Dienste des Betriebssystems, damit sie auf Hardware, Dateien und andere Systemfunktionen zugreifen kann.'
                     }
                 ],
                 threshold: 5,
@@ -482,51 +467,9 @@ class SoftwareLayerVisualizer {
     //  ERKUNDUNGSBEREICH
     // ===========================
     initExploration() {
-        this.renderFlipCards();
         this.renderScenarioWorkshop();
         this.renderCompareTable();
-        this.renderVonNeumannDiagram();
         this.renderPortQuiz();
-    }
-
-    // --- Flip Cards ---
-    renderFlipCards() {
-        const grid = document.getElementById('flipcard-grid');
-        if (!grid) return;
-        const cards = [
-            { layer: 'hardware', icon: '🖥️', label: 'Hardware' },
-            { layer: 'driver', icon: '🔧', label: 'Treiber' },
-            { layer: 'os', icon: '⚙️', label: 'Betriebssystem' },
-            { layer: 'app', icon: '📱', label: 'Anwendersoftware' }
-        ];
-        grid.innerHTML = cards.map(c => {
-            const d = this.layerDetails[c.layer];
-            return `
-            <div class="flipcard" data-layer="${c.layer}" tabindex="0">
-                <div class="flipcard-inner">
-                    <div class="flipcard-front">
-                        <div class="fc-icon">${c.icon}</div>
-                        <div class="fc-label">${c.label}</div>
-                        <div class="fc-hint">Klicke zum Umdrehen</div>
-                    </div>
-                    <div class="flipcard-back">
-                        <div class="fc-back-title">${c.icon} ${c.label}</div>
-                        <div class="fc-back-def">${d.description}</div>
-                        <div class="fc-back-examples">📌 ${d.examples.join(' · ')}</div>
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-
-        grid.querySelectorAll('.flipcard').forEach(card => {
-            card.addEventListener('click', () => card.classList.toggle('flipped'));
-            card.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    card.classList.toggle('flipped');
-                }
-            });
-        });
     }
 
     // --- Szenarien-Werkstatt ---
@@ -652,87 +595,6 @@ class SoftwareLayerVisualizer {
         // Auto-select first scenario
         selectorEl.querySelector('.scenario-select-btn').click();
     }
-
-    // --- Von-Neumann-Diagramm ---
-    renderVonNeumannDiagram() {
-        const container = document.getElementById('von-neumann-diagram');
-        if (!container) return;
-
-        const components = [
-            { id: 'cpu', label: 'Prozessor (CPU)', sublabel: 'Steuerwerk + Rechenwerk', icon: '🧠',
-              desc: 'Der Prozessor ist das Herzstück des Computers. Er besteht aus dem <strong>Steuerwerk</strong> (koordiniert alle Abläufe) und dem <strong>Rechenwerk</strong> (führt Berechnungen durch). Er holt Befehle aus dem Speicher und führt sie nacheinander aus.' },
-            { id: 'ram', label: 'Arbeitsspeicher (RAM)', sublabel: 'Programme + Daten', icon: '📋',
-              desc: 'Im Arbeitsspeicher liegen <strong>Programme und Daten gemeinsam</strong> - das ist das zentrale Merkmal der Von-Neumann-Architektur. Der Speicher ist flüchtig: Beim Ausschalten gehen alle Inhalte verloren.' },
-            { id: 'input', label: 'Eingabewerk', sublabel: 'Tastatur, Maus, Scanner …', icon: '⌨️',
-              desc: 'Das Eingabewerk umfasst alle Geräte, über die <strong>Daten in den Computer gelangen</strong>. Beispiele: Tastatur, Maus, Mikrofon, Scanner, Webcam. Dies entspricht dem „E" im EVA-Prinzip.' },
-            { id: 'output', label: 'Ausgabewerk', sublabel: 'Bildschirm, Drucker, Lautsprecher …', icon: '🖥️',
-              desc: 'Das Ausgabewerk umfasst alle Geräte, über die der Computer <strong>Ergebnisse ausgibt</strong>. Beispiele: Bildschirm, Drucker, Lautsprecher. Dies entspricht dem „A" im EVA-Prinzip.' },
-            { id: 'bus', label: 'Bus-System', sublabel: 'Datenbus · Adressbus · Steuerbus', icon: '🔀',
-              desc: 'Das Bus-System verbindet alle Komponenten miteinander. Der <strong>Datenbus</strong> transportiert Daten, der <strong>Adressbus</strong> gibt die Speicheradresse an und der <strong>Steuerbus</strong> koordiniert die Abläufe.' }
-        ];
-
-        container.innerHTML = `
-            <div class="vn-diagram">
-                <div class="vn-row vn-top-row">
-                    <div class="vn-component" data-id="input" tabindex="0">
-                        <div class="vn-icon">⌨️</div>
-                        <div class="vn-label">Eingabewerk</div>
-                    </div>
-                    <div class="vn-component vn-cpu" data-id="cpu" tabindex="0">
-                        <div class="vn-icon">🧠</div>
-                        <div class="vn-label">Prozessor (CPU)</div>
-                        <div class="vn-sublabel">Steuerwerk + Rechenwerk</div>
-                    </div>
-                    <div class="vn-component" data-id="output" tabindex="0">
-                        <div class="vn-icon">🖥️</div>
-                        <div class="vn-label">Ausgabewerk</div>
-                    </div>
-                </div>
-                <div class="vn-bus-row">
-                    <div class="vn-component vn-bus" data-id="bus" tabindex="0">
-                        <div class="vn-icon">🔀</div>
-                        <div class="vn-label">Bus-System</div>
-                        <div class="vn-sublabel">Datenbus · Adressbus · Steuerbus</div>
-                    </div>
-                </div>
-                <div class="vn-row vn-bottom-row">
-                    <div class="vn-component vn-ram" data-id="ram" tabindex="0">
-                        <div class="vn-icon">📋</div>
-                        <div class="vn-label">Arbeitsspeicher (RAM)</div>
-                        <div class="vn-sublabel">Programme + Daten</div>
-                    </div>
-                </div>
-            </div>
-            <div class="vn-detail" id="vn-detail" style="display:none;">
-                <div class="vn-detail-header">
-                    <span class="vn-detail-icon" id="vn-detail-icon"></span>
-                    <strong id="vn-detail-title"></strong>
-                    <button class="close-btn" id="vn-close-detail">&times;</button>
-                </div>
-                <div class="vn-detail-body" id="vn-detail-body"></div>
-            </div>
-            <p class="vn-hint">💡 <em>Besonderheit der Von-Neumann-Architektur:</em> Programme und Daten teilen sich denselben Arbeitsspeicher und werden über dasselbe Bus-System transportiert.</p>
-        `;
-
-        container.querySelectorAll('.vn-component').forEach(el => {
-            el.style.cursor = 'pointer';
-            el.addEventListener('click', () => {
-                const comp = components.find(c => c.id === el.dataset.id);
-                if (!comp) return;
-                container.querySelectorAll('.vn-component').forEach(c => c.classList.remove('active'));
-                el.classList.add('active');
-                document.getElementById('vn-detail-icon').textContent = comp.icon;
-                document.getElementById('vn-detail-title').textContent = comp.label;
-                document.getElementById('vn-detail-body').innerHTML = comp.desc;
-                document.getElementById('vn-detail').style.display = 'block';
-            });
-        });
-        document.getElementById('vn-close-detail').addEventListener('click', () => {
-            document.getElementById('vn-detail').style.display = 'none';
-            container.querySelectorAll('.vn-component').forEach(c => c.classList.remove('active'));
-        });
-    }
-
     renderPortQuiz() {
         const area = document.getElementById('port-quiz-area');
         if (!area) return;

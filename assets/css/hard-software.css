@@ -614,121 +614,6 @@ body {
     padding: 10px 24px;
 }
 
-/* --- Von-Neumann-Diagramm --- */
-.vn-diagram {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    align-items: center;
-    margin: 20px 0;
-}
-.vn-row {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    width: 100%;
-}
-.vn-top-row {
-    margin-bottom: 0;
-}
-.vn-bus-row {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin: 8px 0;
-}
-.vn-bottom-row {
-    margin-top: 0;
-}
-.vn-component {
-    background: var(--bg-tertiary);
-    border: 2px solid var(--border-color);
-    border-radius: 14px;
-    padding: 16px 20px;
-    text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-    min-width: 130px;
-    flex: 1;
-    max-width: 220px;
-}
-.vn-component:hover, .vn-component:focus {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
-    border-color: var(--accent-secondary);
-    outline: none;
-}
-.vn-component.active {
-    border-color: #58a6ff;
-    box-shadow: 0 4px 16px rgba(88, 166, 255, 0.25);
-}
-.vn-cpu {
-    background: linear-gradient(135deg, #161b22 0%, #1a2332 100%);
-    border-color: var(--accent-secondary);
-}
-.vn-ram {
-    background: linear-gradient(135deg, #161b22 0%, #1a2e1a 100%);
-    border-color: var(--accent-primary);
-}
-.vn-bus {
-    background: linear-gradient(135deg, #1e1a12 0%, #2a2210 100%);
-    border-color: var(--accent-warning);
-    width: 100%;
-    max-width: 100%;
-    border-radius: 10px;
-    padding: 10px 20px;
-}
-.vn-icon {
-    font-size: 2rem;
-    margin-bottom: 4px;
-}
-.vn-label {
-    font-weight: 700;
-    font-size: 0.95rem;
-    color: var(--text-primary);
-}
-.vn-sublabel {
-    font-size: 0.78rem;
-    color: var(--text-secondary);
-    margin-top: 2px;
-}
-.vn-detail {
-    background: var(--bg-secondary);
-    border: 2px solid var(--accent-secondary);
-    border-radius: 12px;
-    padding: 16px;
-    margin-top: 16px;
-    animation: fadeIn 0.3s ease;
-}
-.vn-detail-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-}
-.vn-detail-header .close-btn {
-    margin-left: auto;
-    background: none;
-    border: none;
-    font-size: 1.3rem;
-    cursor: pointer;
-    color: var(--text-secondary);
-    line-height: 1;
-}
-.vn-detail-body {
-    font-size: 0.92rem;
-    line-height: 1.6;
-    color: var(--text-primary);
-}
-.vn-hint {
-    margin-top: 16px;
-    padding: 12px 16px;
-    background: linear-gradient(135deg, #1a1525 0%, #1e1830 100%);
-    border-radius: 10px;
-    font-size: 0.88rem;
-    color: var(--text-primary);
-    border-left: 4px solid #8b5cf6;
-}
-
 /* --- Port Quiz (Schnittstellen-Zuordnung) --- */
 .port-label-bar {
     display: flex;
@@ -1448,90 +1333,6 @@ footer {
     margin-bottom: 16px;
 }
 
-/* --- Flip Cards --- */
-.flipcard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px;
-}
-.flipcard {
-    perspective: 800px;
-    height: 260px;
-    cursor: pointer;
-}
-.flipcard-inner {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    transition: transform 0.5s ease;
-    transform-style: preserve-3d;
-}
-.flipcard.flipped .flipcard-inner {
-    transform: rotateY(180deg);
-}
-.flipcard-front,
-.flipcard-back {
-    position: absolute;
-    inset: 0;
-    border-radius: 12px;
-    padding: 20px;
-    backface-visibility: hidden;
-    display: flex;
-    flex-direction: column;
-    border: 2px solid var(--border-color);
-    overflow-y: auto;
-}
-.flipcard-front {
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 10px;
-}
-.flipcard-front .fc-icon {
-    font-size: 2.8rem;
-}
-.flipcard-front .fc-label {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #fff;
-}
-.flipcard-front .fc-hint {
-    font-size: 0.8rem;
-    opacity: 0.7;
-    margin-top: 4px;
-}
-.flipcard-back {
-    transform: rotateY(180deg);
-    background: var(--bg-tertiary);
-    gap: 8px;
-}
-.flipcard-back .fc-back-title {
-    font-weight: 700;
-    font-size: 1rem;
-    margin-bottom: 2px;
-}
-.flipcard-back .fc-back-def {
-    font-size: 0.88rem;
-    color: var(--text-primary);
-    line-height: 1.5;
-}
-.flipcard-back .fc-back-analogy {
-    font-size: 0.82rem;
-    color: var(--accent-warning);
-    line-height: 1.4;
-}
-.flipcard-back .fc-back-examples {
-    font-size: 0.82rem;
-    color: var(--text-secondary);
-    line-height: 1.4;
-}
-
-/* Layer-specific front colors */
-.flipcard[data-layer="hardware"] .flipcard-front { background: var(--layer-hardware); }
-.flipcard[data-layer="driver"] .flipcard-front { background: var(--layer-driver); }
-.flipcard[data-layer="os"] .flipcard-front { background: var(--layer-os); }
-.flipcard[data-layer="app"] .flipcard-front { background: var(--layer-app); }
-
 /* --- Szenarien-Werkstatt --- */
 .scenario-selector {
     display: flex;
@@ -1768,17 +1569,12 @@ footer {
     .assignment-items { gap: 6px; }
     .assign-item { font-size: 0.82rem; padding: 6px 12px; }
     .exploration-section { padding: 0 15px; }
-    .flipcard-grid { grid-template-columns: 1fr 1fr; }
-    .flipcard { height: 240px; }
     .scenario-selector { gap: 6px; }
     .scenario-select-btn { font-size: 0.82rem; padding: 6px 12px; }
     .compare-table { font-size: 0.82rem; }
     .compare-table th, .compare-table td { padding: 8px 10px; }
     .port-grid { grid-template-columns: repeat(3, 1fr); }
     .port-label-chip { font-size: 0.82rem; padding: 6px 10px; }
-    .vn-row { flex-direction: column; align-items: center; }
-    .vn-component { max-width: 100%; }
-    .vn-icon { font-size: 1.6rem; }
 }
 
 @media (max-width: 480px) {
@@ -1788,8 +1584,6 @@ footer {
     header p { font-size: 0.95rem; }
     .layer-label { font-size: 0.9rem; }
     .scenario-step { font-size: 0.85rem; padding: 10px 12px; }
-    .flipcard-grid { grid-template-columns: 1fr; }
-    .flipcard { height: 220px; }
     .sw-step { font-size: 0.85rem; padding: 10px 12px; }
     .port-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .port-card img { height: 55px; }

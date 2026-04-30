@@ -186,7 +186,7 @@ h3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-areas:
     "binary ascii algorithmen"
-    "software hardware von-neumann";
+    "software von-neumann .";
   gap: 1rem;
 }
 
@@ -204,10 +204,6 @@ h3 {
 
 .card-software {
   grid-area: software;
-}
-
-.card-hardware {
-  grid-area: hardware;
 }
 
 .card-ascii {
@@ -253,10 +249,6 @@ h3 {
 
 .card:nth-child(5) {
   animation-delay: 0.32s;
-}
-
-.card:nth-child(6) {
-  animation-delay: 0.4s;
 }
 
 .card p {
@@ -350,7 +342,6 @@ h3 {
       "ascii"
       "algorithmen"
       "software"
-      "hardware"
       "von-neumann";
   }
 

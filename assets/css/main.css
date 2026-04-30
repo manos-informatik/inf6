@@ -185,8 +185,8 @@ h3 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-areas:
-    "binary algorithmen von-neumann"
-    "ascii . .";
+    "binary ascii algorithmen"
+    "software hardware von-neumann";
   gap: 1rem;
 }
 
@@ -200,6 +200,14 @@ h3 {
 
 .card-von-neumann {
   grid-area: von-neumann;
+}
+
+.card-software {
+  grid-area: software;
+}
+
+.card-hardware {
+  grid-area: hardware;
 }
 
 .card-ascii {
@@ -241,6 +249,14 @@ h3 {
 
 .card:nth-child(4) {
   animation-delay: 0.24s;
+}
+
+.card:nth-child(5) {
+  animation-delay: 0.32s;
+}
+
+.card:nth-child(6) {
+  animation-delay: 0.4s;
 }
 
 .card p {
@@ -333,6 +349,8 @@ h3 {
       "binary"
       "ascii"
       "algorithmen"
+      "software"
+      "hardware"
       "von-neumann";
   }
 

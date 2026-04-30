@@ -4,13 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Von-Neumann + Software + Hardware - Coming soon</title>
-  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="../assets/css/main.css" />
 </head>
 <body data-page-key="von-neumann">
   <header class="hero">
     <div class="progress-toolbar" aria-label="Fortschritt Aktionen">
       <button class="progress-btn" id="saveProgressBtn" type="button">Fortschritt speichern ↑</button>
       <button class="progress-btn" id="loadProgressBtn" type="button">Fortschritt laden ↓</button>
+      <a class="progress-btn" href="../index.html">Zur Startseite ←</a>
       <input id="loadProgressFile" type="file" accept="application/json,.json" hidden />
       <span class="progress-message" id="progressMessage" aria-live="polite"></span>
     </div>
@@ -24,13 +25,12 @@
           zum EVA-Prinzip, zu den Kernbausteinen des Rechners und zu praktischen
           Unterschieden zwischen Hardware und Software.
         </p>
-        <a class="btn ghost" href="../index.html">Zurück zur Startseite</a>
       </div>
       <div class="mascot-wrap" aria-hidden="true">
-        <img class="mascot" src="../binary-ascii-visualizer/Byte_mascot/Byte_Happy.png" alt="" />
+        <img class="mascot" src="../assets/images/byte/Byte_Happy.png" alt="" />
       </div>
     </div>
   </header>
-  <script src="../progress-shared.js"></script>
+  <script src="../assets/js/progress.js"></script>
 </body>
 </html>

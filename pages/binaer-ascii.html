@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Binär-ASCII-Visualizer</title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="style.css">
+    <title>Binärzahlen und ASCII</title>
+    <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/binaer-ascii.css">
 </head>
 <body data-page-key="binaerzahlen">
-    <div class="tc-progress-toolbar" aria-label="Fortschritt Aktionen">
-        <button class="tc-progress-btn" id="saveProgressBtn" type="button">Fortschritt speichern ↑</button>
-        <button class="tc-progress-btn" id="loadProgressBtn" type="button">Fortschritt laden ↓</button>
-        <a class="tc-progress-btn tc-home-btn" href="../index.html">Zur Startseite ←</a>
+    <div class="progress-toolbar" aria-label="Fortschritt Aktionen">
+        <button class="progress-btn" id="saveProgressBtn" type="button">Fortschritt speichern ↑</button>
+        <button class="progress-btn" id="loadProgressBtn" type="button">Fortschritt laden ↓</button>
+        <a class="progress-btn" href="../index.html">Zur Startseite ←</a>
         <input id="loadProgressFile" type="file" accept="application/json,.json" hidden>
-        <span class="tc-progress-message" id="progressMessage" aria-live="polite"></span>
+        <span class="progress-message" id="progressMessage" aria-live="polite"></span>
     </div>
 
     <div class="container">
@@ -245,7 +246,7 @@
             <div class="modal-header">
                 <div class="modal-header-with-byte">
                     <div class="byte-mascot" id="hint-byte">
-                        <img src="Byte_mascot/Byte_normal.png" alt="Byte erklärt">
+                        <img src="../assets/images/byte/Byte_normal.png" alt="Byte erklärt">
                     </div>
                     <h3>💡 Hinweis</h3>
                 </div>
@@ -263,7 +264,7 @@
             <div class="mission-success">
                 <div class="modal-header-with-byte">
                     <div class="byte-mascot celebrating" id="mission-byte">
-                        <img src="Byte_mascot/Byte_Happy.png" alt="Byte freut sich!">
+                        <img src="../assets/images/byte/Byte_Happy.png" alt="Byte freut sich!">
                     </div>
                     <h3>🎉 Mission erfüllt!</h3>
                 </div>
@@ -281,7 +282,7 @@
             <div class="modal-header">
                 <div class="modal-header-with-byte">
                     <div class="byte-mascot" id="help-request-byte">
-                        <img src="Byte_mascot/Byte_normal.png" alt="Byte hilft">
+                        <img src="../assets/images/byte/Byte_normal.png" alt="Byte hilft">
                     </div>
                     <h3>🆘 Hilfe anfordern</h3>
                 </div>
@@ -306,7 +307,7 @@
             <div class="modal-header">
                 <div class="modal-header-with-byte">
                     <div class="byte-mascot" id="help-explanation-byte">
-                        <img src="Byte_mascot/Byte_normal.png" alt="Byte erklärt">
+                        <img src="../assets/images/byte/Byte_normal.png" alt="Byte erklärt">
                     </div>
                     <h3>🎯 So geht's!</h3>
                 </div>
@@ -318,7 +319,7 @@
         </div>
     </div>
 
-    <script src="../progress-shared.js"></script>
-    <script src="script.js"></script>
+    <script src="../assets/js/progress.js"></script>
+    <script src="../assets/js/binaer-ascii.js"></script>
 </body>
 </html>

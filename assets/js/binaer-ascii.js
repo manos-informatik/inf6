@@ -474,9 +474,9 @@ class BinaryAsciiVisualizer {
             // Byte wird traurig wenn Hilfe abgelehnt wird
             const helpByte = document.getElementById('help-request-byte');
             if (helpByte && helpByte.querySelector('img')) {
-                helpByte.querySelector('img').src = 'Byte_mascot/Byte_Sad.png';
+                helpByte.querySelector('img').src = '../assets/images/byte/Byte_Sad.png';
                 setTimeout(() => {
-                    helpByte.querySelector('img').src = 'Byte_mascot/Byte_normal.png';
+                    helpByte.querySelector('img').src = '../assets/images/byte/Byte_normal.png';
                 }, 1000);
             }
             
@@ -1218,7 +1218,7 @@ class BinaryAsciiVisualizer {
         // Byte "denkt nach" Animation
         const helpByte = document.getElementById('help-request-byte');
         if (helpByte && helpByte.querySelector('img')) {
-            helpByte.querySelector('img').src = 'Byte_mascot/Byte_Thinking.png';
+            helpByte.querySelector('img').src = '../assets/images/byte/Byte_Thinking.png';
         }
         
         // Reset button states
@@ -1276,7 +1276,7 @@ class BinaryAsciiVisualizer {
             // Byte wechselt zu "erklärend" und animiert
             const explanationByte = document.getElementById('help-explanation-byte');
             if (explanationByte && explanationByte.querySelector('img')) {
-                explanationByte.querySelector('img').src = 'Byte_mascot/Byte_Happy.png';
+                explanationByte.querySelector('img').src = '../assets/images/byte/Byte_Happy.png';
                 explanationByte.classList.add('celebrating');
                 setTimeout(() => {
                     explanationByte.classList.remove('celebrating');

@@ -32,7 +32,8 @@ const state = {
   image: null,
   imageLabel: '',
   imageSourceUrl: '',
-  downloadUrl: ''
+  downloadUrl: '',
+  recoveringCanvasSource: false
 };
 
 const setStatus = (message, isError = false) => {
@@ -55,18 +56,54 @@ const revokeDownloadUrl = () => {
   state.downloadUrl = '';
 };
 
+const isCanvasSafeSource = (source) => {
+  if (typeof source !== 'string') {
+    return false;
+  }
+
+  return source.startsWith('blob:') || source.startsWith('data:');
+};
+
+const fetchImageAsObjectUrl = async (source) => {
+  const response = await fetch(source);
+  const blob = await response.blob();
+  if (!response.ok && blob.size === 0) {
+    throw new Error('image-fetch-failed');
+  }
+
+  if (!blob.type.startsWith('image/')) {
+    throw new Error('not-image');
+  }
+
+  return URL.createObjectURL(blob);
+};
+
 const updateMeta = (width, height) => {
   imageMeta.textContent = `${state.imageLabel || 'Bild'}: ${width} × ${height} Pixel`;
 };
 
-const setPreview = (image, label) => {
+const setPreview = (image, label, sourceUrl = image.src) => {
   state.image = image;
   state.imageLabel = label;
+  state.imageSourceUrl = sourceUrl;
+  state.recoveringCanvasSource = false;
   sourcePreview.src = image.src;
   sourcePreview.hidden = false;
   previewPlaceholder.hidden = true;
   previewFrame.classList.remove('empty');
   updateMeta(image.naturalWidth || image.width, image.naturalHeight || image.height);
+};
+
+const recoverCanvasSource = async () => {
+  if (!state.imageSourceUrl || isCanvasSafeSource(state.imageSourceUrl)) {
+    throw new Error('no-recoverable-source');
+  }
+
+  const objectUrl = await fetchImageAsObjectUrl(state.imageSourceUrl);
+
+  revokeDownloadUrl();
+  state.downloadUrl = objectUrl;
+  await applyLoadedImage(objectUrl, state.imageLabel, state.imageSourceUrl);
 };
 
 const adjustBrightnessContrast = (value, brightness, contrastMultiplier) => {
@@ -103,8 +140,22 @@ const buildAsciiArt = () => {
   try {
     imageData = ctx.getImageData(0, 0, targetWidth, targetHeight).data;
   } catch {
+    if (!state.recoveringCanvasSource && state.imageSourceUrl && !isCanvasSafeSource(state.imageSourceUrl)) {
+      state.recoveringCanvasSource = true;
+      setStatus('Bild wird für die ASCII-Ausgabe vorbereitet...', false);
+      void recoverCanvasSource().catch(() => {
+        state.recoveringCanvasSource = false;
+        setStatus('Der Bildlink erlaubt keine Pixel-Auswertung. Nutze in diesem Fall bitte den Upload oder ein anderes Bild.', true);
+        asciiOutput.textContent = 'Die ASCII-Ausgabe konnte für dieses Bild nicht erstellt werden.';
+        copyBtn.disabled = true;
+        downloadBtn.disabled = true;
+      });
+      return;
+    }
+
+    state.recoveringCanvasSource = false;
     setStatus('Der Bildlink erlaubt keine Pixel-Auswertung. Nutze in diesem Fall bitte den Upload oder ein anderes Bild.', true);
-    asciiOutput.textContent = 'Die ASCII-Ausgabe konnte für dieses Bild nicht erstellt werden.';
+  asciiOutput.textContent = 'Die ASCII-Ausgabe konnte für dieses Bild nicht erstellt werden.';
     copyBtn.disabled = true;
     downloadBtn.disabled = true;
     return;
@@ -147,6 +198,7 @@ const buildAsciiArt = () => {
   }
 
   asciiOutput.textContent = rows.join('\n');
+  state.recoveringCanvasSource = false;
   setStatus(`ASCII-Kunst erstellt: ${targetWidth} × ${targetHeight} Zeichen.`, false);
   copyBtn.disabled = false;
   downloadBtn.disabled = false;
@@ -161,9 +213,9 @@ const loadImageElement = (source, label) => new Promise((resolve, reject) => {
   image.src = source;
 });
 
-const applyLoadedImage = async (source, label) => {
+const applyLoadedImage = async (source, label, sourceUrl = source) => {
   const { image } = await loadImageElement(source, label);
-  setPreview(image, label);
+  setPreview(image, label, sourceUrl);
   buildAsciiArt();
 };
 
@@ -182,7 +234,7 @@ const handleFileUpload = async (event) => {
   const objectUrl = URL.createObjectURL(file);
 
   try {
-    await applyLoadedImage(objectUrl, file.name);
+    await applyLoadedImage(objectUrl, file.name, objectUrl);
     state.downloadUrl = objectUrl;
     setStatus(`Bild geladen: ${file.name}`, false);
   } catch {
@@ -214,7 +266,7 @@ const loadImageFromUrl = async () => {
     }
 
     objectUrl = URL.createObjectURL(blob);
-    await applyLoadedImage(objectUrl, 'Bildlink');
+    await applyLoadedImage(objectUrl, 'Bildlink', objectUrl);
     state.downloadUrl = objectUrl;
     setStatus('Bildlink erfolgreich geladen.', false);
   } catch {
@@ -271,11 +323,26 @@ sampleButtons.forEach((button) => {
     revokeDownloadUrl();
     const sampleSource = button.dataset.sampleSrc;
     const label = button.textContent.trim();
+    let loadedSource = sampleSource;
+    let isObjectUrl = false;
 
     try {
-      await applyLoadedImage(sampleSource, label);
+      try {
+        loadedSource = await fetchImageAsObjectUrl(sampleSource);
+        isObjectUrl = true;
+      } catch {
+        loadedSource = sampleSource;
+      }
+
+      await applyLoadedImage(loadedSource, label, sampleSource);
+      if (isObjectUrl) {
+        state.downloadUrl = loadedSource;
+      }
       setStatus(`Beispiel geladen: ${label}`, false);
     } catch {
+      if (isObjectUrl) {
+        URL.revokeObjectURL(loadedSource);
+      }
       setStatus('Das Beispielbild konnte nicht geladen werden.', true);
     }
   });

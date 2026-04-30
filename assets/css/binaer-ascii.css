@@ -47,38 +47,14 @@ body {
     min-height: 100vh;
 }
 
-.tc-progress-toolbar {
+.progress-toolbar {
     max-width: 1400px;
+    width: calc(100% - 40px);
     margin: 20px auto 0;
-    padding: 0 20px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
 }
 
-.tc-progress-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    border: 1px solid var(--border-color);
-    background: linear-gradient(165deg, #1b2537, #2f4158);
-    color: #dcf4ff;
-    text-decoration: none;
-    font-weight: 700;
-    border-radius: 8px;
-    padding: 8px 12px;
-    cursor: pointer;
-}
-
-.tc-progress-btn:hover {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 10px var(--trace-glow);
-}
-
-.tc-progress-message {
+.progress-message {
     color: var(--text-secondary);
-    font-size: 0.92rem;
 }
 
 .container {

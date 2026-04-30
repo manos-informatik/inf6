@@ -1,39 +1,203 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hard- und Software - Coming soon</title>
-  <link rel="icon" type="image/png" href="../assets/images/favicon.png" />
-  <link rel="stylesheet" href="../assets/css/main.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hard- und Software</title>
+    <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/hard-software.css">
 </head>
 <body data-page-key="hard-und-software">
-  <header class="hero">
-    <div class="progress-toolbar" aria-label="Fortschritt Aktionen">
-      <button class="progress-btn" id="saveProgressBtn" type="button">Fortschritt speichern ↑</button>
-      <button class="progress-btn" id="loadProgressBtn" type="button">Fortschritt laden ↓</button>
-      <a class="progress-btn" href="../index.html">Zur Startseite ←</a>
-      <input id="loadProgressFile" type="file" accept="application/json,.json" hidden />
-      <span class="progress-message" id="progressMessage" aria-live="polite"></span>
+    <header class="hero hs-hero">
+        <div class="progress-toolbar" aria-label="Fortschritt Aktionen">
+            <button class="progress-btn" id="saveProgressBtn" type="button">Fortschritt speichern ↑</button>
+            <button class="progress-btn" id="loadProgressBtn" type="button">Fortschritt laden ↓</button>
+            <a class="progress-btn" href="../index.html">Zur Startseite ←</a>
+            <input id="loadProgressFile" type="file" accept="application/json,.json" hidden>
+            <span class="progress-message" id="progressMessage" aria-live="polite"></span>
+        </div>
+
+        <div class="hero-inner">
+            <div class="hs-hero-copy">
+                <p class="eyebrow">Aktiv</p>
+                <h1>Zusammenarbeit von Hard- und Software</h1>
+                <button class="glossary-btn" id="open-glossary">📖 Glossar - Wichtige Begriffe</button>
+            </div>
+            <div class="mascot-wrap" aria-hidden="true">
+                <img class="mascot" src="../assets/images/byte/Byte_Thinking.png" alt="" />
+                <span class="speech">Was ist der Unterschied zwischen Hard- und Software?</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <div class="main-content">
+            <!-- Interaktives Schichtenmodell -->
+            <section class="card layer-model-card">
+                <h2>Das Schichtenmodell</h2>
+                <div class="layer-model" id="layer-model">
+                    <div class="layer" data-layer="app" tabindex="0">
+                        <div class="layer-icon">📱</div>
+                        <div class="layer-label">Anwendersoftware</div>
+                        <div class="layer-examples">Word, Browser, Spiele, Spotify …</div>
+                    </div>
+                    <div class="layer-arrow">⬆ nutzt ⬇</div>
+                    <div class="layer" data-layer="os" tabindex="0">
+                        <div class="layer-icon">⚙️</div>
+                        <div class="layer-label">Betriebssystem</div>
+                        <div class="layer-examples">Windows, macOS, Linux, Android …</div>
+                    </div>
+                    <div class="layer-arrow">⬆ nutzt ⬇</div>
+                    <div class="layer" data-layer="driver" tabindex="0">
+                        <div class="layer-icon">🔧</div>
+                        <div class="layer-label">Treiber</div>
+                        <div class="layer-examples">Druckertreiber, Grafiktreiber …</div>
+                    </div>
+                    <div class="layer-arrow">⬆ nutzt ⬇</div>
+                    <div class="layer" data-layer="hardware" tabindex="0">
+                        <div class="layer-icon">🖥️</div>
+                        <div class="layer-label">Hardware</div>
+                        <div class="layer-examples">Prozessor, Festplatte, Drucker …</div>
+                    </div>
+                </div>
+                <!-- Detailansicht bei Klick auf eine Schicht -->
+                <div class="layer-detail" id="layer-detail" style="display:none;">
+                    <div class="layer-detail-header">
+                        <span class="layer-detail-icon" id="detail-icon"></span>
+                        <h3 id="detail-title"></h3>
+                        <button class="close-btn" id="close-detail">&times;</button>
+                    </div>
+                    <div class="layer-detail-body">
+                        <p id="detail-description"></p>
+                        <div class="detail-examples-list">
+                            <strong>Beispiele:</strong>
+                            <ul id="detail-examples"></ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
     </div>
 
-    <div class="hero-inner">
-      <div>
-        <p class="eyebrow">Coming soon</p>
-        <h1>Hard- und Software</h1>
-        <p class="intro blurred">
-          Bald findest du hier Erklärungen zu Computerbauteilen, Programmen
-          und dazu, wie Hard- und Software zusammenarbeiten.
-        </p>
-      </div>
-      <div class="mascot-wrap" aria-hidden="true">
-        <img class="mascot" src="../assets/images/byte/Byte_Thinking.png" alt="" />
-      </div>
+    <!-- ==============================
+         INTERAKTIVER ERKUNDUNGSBEREICH
+         ============================== -->
+    <section class="exploration-section">
+        <div class="exploration-container">
+            <div class="exploration-header">
+                <div class="byte-mascot">
+                    <img src="../assets/images/byte/Byte_Thinking.png" alt="Byte denkt nach">
+                </div>
+                <div>
+                    <h2>🔎 Erkundungsbereich</h2>
+                </div>
+            </div>
+
+            <!-- === Szenarien-Werkstatt === -->
+            <div class="explore-block">
+                <h3>🛤️ Was passiert eigentlich…?</h3>
+                <p class="explore-intro">Wähle einen Anwendungsfall aus und klicke dich Schritt für Schritt durch den Kommunikationsweg der Schichten.</p>
+                <div class="scenario-selector" id="scenario-selector"></div>
+                <div class="scenario-walkthrough" id="scenario-walkthrough"></div>
+            </div>
+
+            <!-- === Vergleichstabelle === -->
+            <div class="explore-block">
+                <h3>📊 Vergleichstabelle - Finde die Unterschiede!</h3>
+                <p class="explore-intro">Fülle die Tabelle aus, um dir einen Überblick über die Unterschiede zu verschaffen.</p>
+                <div class="compare-table-wrapper" id="compare-table-wrapper"></div>
+                <button class="compare-check-btn" id="compare-check-btn">✔ Tabelle prüfen</button>
+                <div class="compare-feedback" id="compare-feedback"></div>
+            </div>
+
+
+            <!-- === Schnittstellen-Zuordnung === -->
+            <div class="explore-block">
+                <h3>🔌 Schnittstellen erkennen - Ordne zu!</h3>
+                <p class="explore-intro">Ziehe den richtigen Begriff auf das passende Bild der PC-Schnittstelle. Erkennst du alle 10 Anschlüsse?</p>
+                <div id="port-quiz-area"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mission System -->
+    <section class="mission-section">
+        <div class="mission-container">
+            <div class="mission-header">
+                <div class="byte-mascot" id="mission-byte-mascot">
+                    <img src="../assets/images/byte/Byte_normal.png" alt="Byte Maskottchen">
+                </div>
+                <h2>Missionen</h2>
+            </div>
+            <div class="mission-content">
+                <div class="mission-text" id="mission-content">
+                    Lade die Anwendung…
+                </div>
+                <!-- Dynamischer Übungsbereich -->
+                <div class="exercise-area" id="exercise-area"></div>
+                <div class="mission-progress">
+                    <span id="mission-counter">1 / 8</span>
+                </div>
+            </div>
+            <div class="mission-navigation">
+                <div class="mission-buttons" id="mission-buttons"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="impressum">
+            <p>
+                © 2026 Martin-Andersen-Nexö-Gymnasium Dresden
+            </p>
+        </div>
+    </footer>
+
+    <!-- Mission Success Modal -->
+    <div class="modal-overlay" id="mission-modal">
+        <div class="modal-content mission-modal">
+            <div class="mission-success">
+                <div class="modal-header-with-byte">
+                    <div class="byte-mascot celebrating" id="mission-success-byte">
+                        <img src="../assets/images/byte/Byte_Happy.png" alt="Byte freut sich!">
+                    </div>
+                    <h3>🎉 Mission erfüllt!</h3>
+                </div>
+                <div class="mission-result" id="mission-result"></div>
+                <div class="mission-timer" id="mission-timer" style="display: none;">
+                    <div class="timer-bar">
+                        <div class="timer-progress" id="timer-progress"></div>
+                    </div>
+                </div>
+                <button class="continue-btn" id="continue-mission" style="display: none;">Weiter</button>
+            </div>
+        </div>
     </div>
-  </header>
-  <footer class="footer">
-    <p>&copy; 2026 Martin-Andersen-Nexö-Gymnasium Dresden</p>
-  </footer>
-  <script src="../assets/js/progress.js"></script>
+
+    <!-- Glossar Modal -->
+    <div class="modal-overlay" id="glossary-modal">
+        <div class="modal-content glossary-modal-content">
+            <div class="modal-header">
+                <h3>📖 Glossar - Wichtige Begriffe</h3>
+                <button class="close-btn" id="close-glossary">&times;</button>
+            </div>
+            <div class="glossary-list" id="glossary-list"></div>
+        </div>
+    </div>
+
+    <!-- Glossar Popup (für Inline-Klick auf Begriffe) -->
+    <div class="glossary-popup" id="glossary-popup" style="display:none;">
+        <div class="glossary-popup-header">
+            <span class="glossary-popup-term" id="popup-term"></span>
+            <button class="close-btn close-popup" id="close-popup">&times;</button>
+        </div>
+        <p class="glossary-popup-def" id="popup-definition"></p>
+        <p class="glossary-popup-example" id="popup-example"></p>
+    </div>
+
+    <script src="../assets/js/progress.js"></script>
+    <script src="../assets/js/hard-software.js"></script>
 </body>
 </html>

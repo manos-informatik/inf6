@@ -572,7 +572,7 @@ end`;
     } else if (memoryFull) {
       this.setFeedback(this.task4Feedback, `Der Wartespeicher ist voll. Das Programm bricht ab.`, 'error');
     } else {
-      this.setFeedback(this.task4Feedback, `Nach ${this.state.bottleneckElapsed} Sekunden warten ${this.state.bottleneckWaiting} Anfragen. Pro Sekunde kommen ${requests} an, aber nur ${capacity} passen durch den Bus.`, '');
+      this.setFeedback(this.task4Feedback, `Nach ${this.state.bottleneckElapsed} Sekunden warten ${this.state.bottleneckWaiting} Anfragen. Die Leistung des Computers wird gedrosselt, da zunächst vorhandene Anfragen bearbeitet werden müssen.`, '');
     }
   }
 

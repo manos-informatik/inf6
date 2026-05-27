@@ -209,8 +209,7 @@ select:focus {
 
 .feedback-box,
 .solution-box,
-.sim-status,
-.output-log {
+.sim-status {
   margin-top: 0.75rem;
   border: 1px solid var(--vn-line);
   border-radius: 10px;
@@ -312,6 +311,20 @@ select:focus {
 .bottleneck-lab input[type="range"] {
   width: 100%;
   accent-color: var(--vn-yellow);
+}
+
+.bottleneck-lab input[type="number"] {
+  margin-bottom: 0;
+}
+
+.bottleneck-actions {
+  margin-top: 0;
+}
+
+.bottleneck-actions .vn-btn:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.2);
+  opacity: 0.6;
 }
 
 .bottleneck-model {
@@ -419,6 +432,28 @@ select:focus {
   white-space: nowrap;
 }
 
+.bus-end {
+  position: absolute;
+  bottom: 0.65rem;
+  z-index: 2;
+  border: 1px solid rgba(34, 211, 238, 0.34);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #dff9ff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0.22rem 0.55rem;
+  text-transform: uppercase;
+}
+
+.bus-start {
+  left: 0.65rem;
+}
+
+.bus-finish {
+  right: 0.65rem;
+}
+
 .bottleneck-packet {
   position: absolute;
   left: 9%;
@@ -434,6 +469,11 @@ select:focus {
   font-weight: 950;
   transform: translate(-50%, -50%);
   animation: bottleneckPacket 1.8s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+.bottleneck-packet.moving {
+  animation-play-state: running;
 }
 
 @keyframes bottleneckPacket {
@@ -448,7 +488,7 @@ select:focus {
   text-align: center;
 }
 
-.bus-target strong {
+.bus-target > strong {
   font-size: 2.2rem;
   color: var(--vn-green);
 }
@@ -516,6 +556,22 @@ select:focus {
   background: linear-gradient(165deg, rgba(251, 113, 133, 0.9), rgba(220, 38, 38, 0.78));
 }
 
+.bottleneck-history {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+  color: rgba(226, 232, 240, 0.84);
+  font-size: 0.92rem;
+}
+
+.bottleneck-history p {
+  margin: 0;
+  border: 1px solid rgba(100, 116, 139, 0.24);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.48);
+  padding: 0.42rem 0.55rem;
+}
+
 .simulator-section {
   margin-top: 1rem;
 }
@@ -554,6 +610,15 @@ select:focus {
   margin-top: 1rem;
   border-top: 1px solid rgba(100, 116, 139, 0.3);
   padding-top: 1rem;
+}
+
+.active-task-box {
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  border-radius: 10px;
+  color: #dff9ff;
+  background: rgba(15, 23, 42, 0.62);
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.8rem;
 }
 
 .field-label {
@@ -829,7 +894,7 @@ input {
   box-shadow: 0 0 20px rgba(251, 191, 36, 0.85);
   transform: translate(-50%, -50%);
   transition: left 320ms linear, top 320ms linear, opacity 180ms ease;
-  opacity: 0.96;
+  opacity: 0;
 }
 
 .bus-label {
@@ -878,10 +943,114 @@ input {
   color: #fef3c7;
 }
 
-.output-log {
-  min-height: 5rem;
+.extension-task span,
+.extension-task small,
+.extension-task em {
+  display: block;
+}
+
+.extension-task small {
+  color: var(--vn-muted);
+  margin-top: 0.22rem;
+}
+
+.extension-task .task-result {
+  color: #bfdbfe;
+}
+
+.extension-task em {
+  color: var(--vn-yellow);
+  font-style: normal;
+  font-weight: 850;
+  margin-top: 0.28rem;
+}
+
+.extension-task.current {
+  border-color: rgba(34, 211, 238, 0.9);
+  background: rgba(34, 211, 238, 0.12);
+}
+
+.extension-task.completed {
+  border-color: rgba(16, 185, 129, 0.85);
+  background: rgba(16, 185, 129, 0.13);
+}
+
+.extension-task.completed em {
+  color: #86efac;
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  background: rgba(2, 6, 23, 0.72);
+  padding: 1rem;
+}
+
+.command-modal {
+  width: min(760px, 100%);
+  max-height: min(720px, 92vh);
+  overflow: auto;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  border-radius: 16px;
+  background: linear-gradient(175deg, rgba(23, 32, 51, 0.98), rgba(32, 44, 67, 0.98));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+  padding: 1rem;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+
+.modal-header h2 {
+  margin: 0;
+}
+
+.close-btn {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 10px;
+  border: 1px solid var(--vn-line);
+  background: #0b1220;
+  color: var(--vn-text);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.command-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.command-item {
+  border: 1px solid rgba(100, 116, 139, 0.36);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.64);
+  padding: 0.7rem;
+}
+
+.command-item h3 {
+  margin: 0 0 0.35rem;
+  color: var(--vn-yellow);
   font-family: Consolas, "Courier New", monospace;
-  white-space: pre-wrap;
+}
+
+.command-item p {
+  margin: 0;
+  color: var(--vn-muted);
+  line-height: 1.42;
 }
 
 @media (max-width: 1120px) {
@@ -898,6 +1067,7 @@ input {
   .vn-hero-inner,
   .matching-layout,
   .sim-header,
+  .bottleneck-controls,
   .bottleneck-model,
   .bottleneck-stats {
     grid-template-columns: 1fr;
@@ -952,7 +1122,8 @@ input {
   }
 
   .register-list div,
-  .program-line {
+  .program-line,
+  .command-list {
     grid-template-columns: 1fr;
   }
 

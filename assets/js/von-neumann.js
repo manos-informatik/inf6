@@ -41,97 +41,73 @@ end`;
 
     this.extensionTasks = [
       {
+        id: 'double',
         level: 'Leicht',
         title: 'Verdoppler',
         text: 'Lies eine Zahl ein, verdopple sie und gib sie aus.',
-        program: `in a
-ld a
-mul 2
-out akku
-end`
+        test: 'Teste mit Eingabe 7. Erwartete Ausgabe: 14.',
+        expectedOutput: [14]
       },
       {
+        id: 'average',
         level: 'Leicht',
         title: 'Durchschnitt von zwei Zahlen',
         text: 'Lies zwei Zahlen ein und gib ihren Durchschnitt aus.',
-        program: `in a
-in b
-ld a
-add b
-div 2
-out akku
-end`
+        test: 'Teste mit Eingaben 8 und 12. Erwartete Ausgabe: 10.',
+        expectedOutput: [10]
       },
       {
+        id: 'sum3',
         level: 'Mittel',
         title: 'Summe aus drei Zahlen',
         text: 'Lies drei Zahlen ein und gib ihre Summe aus.',
-        program: `in a
-in b
-in c
-ld a
-add b
-add c
-out akku
-end`
+        test: 'Teste mit Eingaben 3, 4 und 5. Erwartete Ausgabe: 12.',
+        expectedOutput: [12]
       },
       {
+        id: 'diff2',
         level: 'Mittel',
         title: 'Differenz mal 2',
         text: 'Ziehe b von a ab, verdopple das Ergebnis und gib es aus.',
-        program: `in a
-in b
-ld a
-sub b
-mul 2
-out akku
-end`
+        test: 'Teste mit Eingaben 12 und 5. Erwartete Ausgabe: 14.',
+        expectedOutput: [14]
       },
       {
+        id: 'stored',
         level: 'Schwer',
         title: 'Zwischenergebnis nutzen',
         text: 'Speichere a + b in e, lade e erneut und addiere c.',
-        program: `in a
-in b
-in c
-ld a
-add b
-st e
-ld e
-add c
-out akku
-end`
+        test: 'Teste mit Eingaben 2, 8 und 10. Erwartete Ausgabe: 20.',
+        expectedOutput: [20]
       },
       {
+        id: 'fibonacci',
         level: 'Schwer',
         title: 'Erste 5 Fibonacci-Zahlen',
         text: 'Gib 0, 1, 1, 2 und 3 nacheinander aus.',
-        program: `ld 0
-st a
-out a
-ld 1
-st b
-out b
-ld a
-add b
-st c
-out c
-ld b
-add c
-st d
-out d
-ld c
-add d
-st e
-out e
-end`
+        test: 'Keine Eingabe nötig. Erwartete Ausgaben: 0, 1, 1, 2, 3.',
+        expectedOutput: [0, 1, 1, 2, 3]
       }
+    ];
+
+    this.commandGlossary = [
+      { command: 'in x', text: 'Wartet auf eine Eingabe und speichert die Zahl in Speicherzelle x, zum Beispiel in a.' },
+      { command: 'ld x', text: 'Lädt den Wert aus Speicherzelle x in den Akku. Statt x darf auch direkt eine Zahl stehen.' },
+      { command: 'st x', text: 'Speichert den aktuellen Akku-Wert in Speicherzelle x.' },
+      { command: 'add x', text: 'Addiert x zum Akku. x kann eine Speicherzelle oder eine Zahl sein.' },
+      { command: 'sub x', text: 'Zieht x vom Akku ab.' },
+      { command: 'mul x', text: 'Multipliziert den Akku mit x.' },
+      { command: 'div x', text: 'Teilt den Akku durch x. Division durch 0 ist nicht erlaubt.' },
+      { command: 'out x', text: 'Gibt den Wert aus x aus. Mit out akku wird direkt der Akku ausgegeben.' },
+      { command: 'end', text: 'Beendet das Programm.' }
     ];
 
     this.state = this.createInitialState();
     this.selectedComponent = null;
     this.runTimer = null;
+    this.bottleneckTimer = null;
     this.busMoveTimers = [];
+    this.busMoveToken = 0;
     this.isRestoring = false;
 
     this.cacheElements();
@@ -153,7 +129,18 @@ end`
       task3Solved: false,
       task3Revealed: false,
       bottleneckCapacity: 3,
-      bottleneckRequests: 8,
+      bottleneckRequests: 6,
+      bottleneckElapsed: 0,
+      bottleneckWaiting: 0,
+      bottleneckProcessedThisSecond: 0,
+      bottleneckProcessedTotal: 0,
+      bottleneckRunning: false,
+      bottleneckAborted: false,
+      bottleneckHistory: [],
+      activeTaskId: '',
+      taskPrograms: {},
+      taskResults: {},
+      completedTasks: [],
       simulator: this.createFreshSimulatorState()
     };
   }
@@ -175,7 +162,8 @@ end`
       lastChangedCell: '',
       busText: 'Der Bus wartet auf den nächsten Schritt.',
       busFrom: 'control',
-      busTo: 'memory'
+      busTo: 'memory',
+      busVisible: false
     };
   }
 
@@ -198,18 +186,21 @@ end`
     this.task2Feedback = document.getElementById('task2Feedback');
     this.clozeText = document.getElementById('clozeText');
     this.task3Feedback = document.getElementById('task3Feedback');
-    this.capacitySlider = document.getElementById('capacitySlider');
-    this.capacityCountLabel = document.getElementById('capacityCountLabel');
-    this.requestSlider = document.getElementById('requestSlider');
-    this.requestCountLabel = document.getElementById('requestCountLabel');
+    this.capacityInput = document.getElementById('capacityInput');
+    this.requestInput = document.getElementById('requestInput');
     this.requestQueue = document.getElementById('requestQueue');
     this.processedCount = document.getElementById('processedCount');
     this.waitingCount = document.getElementById('waitingCount');
+    this.bottleneckTime = document.getElementById('bottleneckTime');
     this.busLoadText = document.getElementById('busLoadText');
     this.busLoadBar = document.getElementById('busLoadBar');
     this.memoryFillText = document.getElementById('memoryFillText');
     this.memoryBuffer = document.getElementById('memoryBuffer');
+    this.bottleneckHistory = document.getElementById('bottleneckHistory');
     this.bottleneckPacket = document.getElementById('bottleneckPacket');
+    this.bottleneckStartBtn = document.getElementById('bottleneckStartBtn');
+    this.bottleneckStopBtn = document.getElementById('bottleneckStopBtn');
+    this.bottleneckResetBtn = document.getElementById('bottleneckResetBtn');
     this.task4Feedback = document.getElementById('task4Feedback');
     this.programEditor = document.getElementById('programEditor');
     this.inputQueue = document.getElementById('inputQueue');
@@ -227,6 +218,11 @@ end`
     this.busPacket = document.getElementById('busPacket');
     this.currentBusText = document.getElementById('currentBusText');
     this.extensionTasksContainer = document.getElementById('extensionTasks');
+    this.activeTaskBox = document.getElementById('activeTaskBox');
+    this.openCommandGlossary = document.getElementById('openCommandGlossary');
+    this.closeCommandGlossary = document.getElementById('closeCommandGlossary');
+    this.commandGlossaryModal = document.getElementById('commandGlossaryModal');
+    this.commandGlossaryList = document.getElementById('commandGlossaryList');
   }
 
   registerProgressBridge() {
@@ -294,17 +290,13 @@ end`
       this.saveState();
     });
 
-    this.capacitySlider.addEventListener('input', () => {
-      this.state.bottleneckCapacity = Number(this.capacitySlider.value);
-      this.renderTask4();
-      this.saveState();
-    });
-
-    this.requestSlider.addEventListener('input', () => {
-      this.state.bottleneckRequests = Number(this.requestSlider.value);
-      this.renderTask4();
-      this.saveState();
-    });
+    this.capacityInput.addEventListener('input', () => this.updateBottleneckDraft());
+    this.requestInput.addEventListener('input', () => this.updateBottleneckDraft());
+    this.capacityInput.addEventListener('change', () => this.updateBottleneckSettings());
+    this.requestInput.addEventListener('change', () => this.updateBottleneckSettings());
+    this.bottleneckStartBtn.addEventListener('click', () => this.startBottleneckSimulation());
+    this.bottleneckStopBtn.addEventListener('click', () => this.stopBottleneckSimulation('Simulation gestoppt.'));
+    this.bottleneckResetBtn.addEventListener('click', () => this.resetBottleneckSimulation());
 
     this.programEditor.addEventListener('input', () => this.updateProgramFromEditor());
     this.inputQueue.addEventListener('input', () => this.updateInputsFromField());
@@ -322,8 +314,17 @@ end`
     document.getElementById('runBtn').addEventListener('click', () => this.startAutoRun());
     document.getElementById('stopBtn').addEventListener('click', () => this.stopAutoRun('Auto-Lauf gestoppt.'));
 
+    this.openCommandGlossary.addEventListener('click', () => this.showCommandGlossary());
+    this.closeCommandGlossary.addEventListener('click', () => this.hideCommandGlossary());
+    this.commandGlossaryModal.addEventListener('click', (event) => {
+      if (event.target === this.commandGlossaryModal) {
+        this.hideCommandGlossary();
+      }
+    });
+
     window.addEventListener('beforeunload', () => {
       this.stopAutoRun('');
+      this.stopBottleneckSimulation('');
       this.saveState();
     });
   }
@@ -334,6 +335,7 @@ end`
     this.renderTask4();
     this.renderSimulator();
     this.renderExtensionTasks();
+    this.renderCommandGlossary();
   }
 
   renderTask2() {
@@ -506,49 +508,181 @@ end`
   }
 
   renderTask4() {
-    const capacity = Math.max(1, Math.min(6, Number(this.state.bottleneckCapacity) || 3));
-    const requests = Math.max(1, Math.min(12, Number(this.state.bottleneckRequests) || 8));
-    const processed = Math.min(capacity, requests);
-    const waiting = Math.max(0, requests - capacity);
+    const capacity = this.normalizePositiveNumber(this.state.bottleneckCapacity, 3, 30);
+    const requests = this.normalizePositiveNumber(this.state.bottleneckRequests, 6, 30);
+    const memoryLimit = 30;
     const load = Math.min(100, Math.round((requests / capacity) * 100));
-    const memoryLimit = 12;
-    const memoryFill = Math.min(memoryLimit, waiting * 3);
-    const memoryFull = memoryFill >= memoryLimit;
+    const memoryPercent = Math.min(100, Math.round((this.state.bottleneckWaiting / memoryLimit) * 100));
+    const memoryFull = this.state.bottleneckWaiting >= memoryLimit;
 
-    this.capacitySlider.value = String(capacity);
-    this.requestSlider.value = String(requests);
-    this.capacityCountLabel.textContent = String(capacity);
-    this.requestCountLabel.textContent = String(requests);
-    this.processedCount.textContent = String(processed);
-    this.waitingCount.textContent = String(waiting);
+    this.capacityInput.value = String(capacity);
+    this.requestInput.value = String(requests);
+    this.processedCount.textContent = String(this.state.bottleneckProcessedThisSecond);
+    this.waitingCount.textContent = String(this.state.bottleneckWaiting);
+    this.bottleneckTime.textContent = `${this.state.bottleneckElapsed} s`;
     this.busLoadText.textContent = `${load}%`;
     this.busLoadBar.style.width = `${load}%`;
-    this.memoryFillText.textContent = memoryFull ? 'voll' : `${memoryFill}/${memoryLimit}`;
-    this.bottleneckPacket.textContent = `${processed}/s`;
+    this.memoryFillText.textContent = memoryFull ? '100%' : `${memoryPercent}%`;
+    this.bottleneckPacket.textContent = `${capacity}/s`;
+    this.bottleneckPacket.classList.toggle('moving', this.state.bottleneckRunning);
+    this.bottleneckStartBtn.disabled = this.state.bottleneckRunning || this.state.bottleneckAborted;
+    this.bottleneckStopBtn.disabled = !this.state.bottleneckRunning;
 
     this.requestQueue.innerHTML = '';
-    for (let index = 1; index <= requests; index += 1) {
+    for (let index = 1; index <= Math.min(requests, 30); index += 1) {
       const chip = document.createElement('span');
       chip.className = `request-chip${index > capacity ? ' waiting' : ' passing'}`;
       chip.textContent = index <= capacity ? '✓' : String(index - capacity);
-      chip.title = index <= capacity ? 'Diese Anfrage passt in dieser Sekunde auf den Bus.' : 'Diese Anfrage muss warten.';
+      chip.title = index <= capacity ? 'Diese Anfrage kann in dieser Sekunde auf den Bus.' : 'Diese Anfrage kommt in die Warteschlange.';
       this.requestQueue.appendChild(chip);
     }
 
     this.memoryBuffer.innerHTML = '';
-    for (let index = 0; index < memoryLimit; index += 1) {
+    const slots = 15;
+    const filledSlots = Math.min(slots, Math.ceil((this.state.bottleneckWaiting / memoryLimit) * slots));
+    for (let index = 0; index < slots; index += 1) {
       const slot = document.createElement('span');
-      slot.className = `memory-slot${index < memoryFill ? ' filled' : ''}${memoryFull ? ' danger' : ''}`;
+      slot.className = `memory-slot${index < filledSlots ? ' filled' : ''}${memoryFull ? ' danger' : ''}`;
       this.memoryBuffer.appendChild(slot);
     }
 
-    if (waiting === 0) {
-      this.setFeedback(this.task4Feedback, `Der Bus schafft ${capacity} pro Sekunde. Bei ${requests} Anfragen entsteht kein Stau.`, 'success');
-    } else if (memoryFull) {
-      this.setFeedback(this.task4Feedback, `Flaschenhals: Der Bus schafft ${capacity}, aber ${requests} Anfragen kommen pro Sekunde. Der Wartespeicher läuft voll, das Programm bricht ab.`, 'error');
+    this.bottleneckHistory.innerHTML = '';
+    const history = Array.isArray(this.state.bottleneckHistory) ? this.state.bottleneckHistory.slice(-6) : [];
+    if (!history.length) {
+      const emptyRow = document.createElement('p');
+      emptyRow.textContent = 'Starte die Simulation: jede Sekunde kommt eine neue Anfragewelle.';
+      this.bottleneckHistory.appendChild(emptyRow);
     } else {
-      this.setFeedback(this.task4Feedback, `Engpass: ${processed} werden verarbeitet, ${waiting} pro Sekunde müssen warten. Der Wartespeicher füllt sich.`, '');
+      history.forEach((entry) => {
+        const row = document.createElement('p');
+        row.textContent = `${entry.second} s: ${entry.incoming} kommen an, ${entry.processed} fahren durch, ${entry.waiting} warten.`;
+        this.bottleneckHistory.appendChild(row);
+      });
     }
+
+    if (this.state.bottleneckAborted) {
+      this.setFeedback(this.task4Feedback, `Nach ${this.state.bottleneckElapsed} Sekunden ist der Wartespeicher voll: ${this.state.bottleneckWaiting} Anfragen warten. Das Programm bricht ab.`, 'error');
+    } else if (this.state.bottleneckElapsed === 0) {
+      this.setFeedback(this.task4Feedback, `Beispiel: Bus = ${capacity}, Anfragen = ${requests}. Starte die Simulation und beobachte, wie der Wartespeicher pro Sekunde wächst.`, '');
+    } else if (this.state.bottleneckWaiting === 0) {
+      this.setFeedback(this.task4Feedback, `Nach ${this.state.bottleneckElapsed} Sekunden gibt es keinen Stau. Der Bus schafft alle Anfragen.`, 'success');
+    } else if (memoryFull) {
+      this.setFeedback(this.task4Feedback, `Der Wartespeicher ist voll. Das Programm bricht ab.`, 'error');
+    } else {
+      this.setFeedback(this.task4Feedback, `Nach ${this.state.bottleneckElapsed} Sekunden warten ${this.state.bottleneckWaiting} Anfragen. Pro Sekunde kommen ${requests} an, aber nur ${capacity} passen durch den Bus.`, '');
+    }
+  }
+
+  updateBottleneckSettings() {
+    this.clearBottleneckTimer();
+    this.state.bottleneckCapacity = this.normalizePositiveNumber(this.capacityInput.value, 3, 30);
+    this.state.bottleneckRequests = this.normalizePositiveNumber(this.requestInput.value, 6, 30);
+    this.resetBottleneckCounters();
+    this.renderTask4();
+    this.saveState();
+  }
+
+  updateBottleneckDraft() {
+    this.clearBottleneckTimer();
+
+    const capacity = Number(this.capacityInput.value);
+    const requests = Number(this.requestInput.value);
+    if (Number.isFinite(capacity) && capacity > 0) {
+      this.state.bottleneckCapacity = Math.min(30, Math.floor(capacity));
+    }
+    if (Number.isFinite(requests) && requests > 0) {
+      this.state.bottleneckRequests = Math.min(30, Math.floor(requests));
+    }
+
+    this.resetBottleneckCounters();
+    this.bottleneckStartBtn.disabled = false;
+    this.bottleneckStopBtn.disabled = true;
+    this.bottleneckPacket.classList.remove('moving');
+    this.saveState();
+  }
+
+  startBottleneckSimulation() {
+    if (this.state.bottleneckRunning || this.state.bottleneckAborted) {
+      return;
+    }
+
+    this.state.bottleneckCapacity = this.normalizePositiveNumber(this.capacityInput.value, 3, 30);
+    this.state.bottleneckRequests = this.normalizePositiveNumber(this.requestInput.value, 6, 30);
+    this.state.bottleneckRunning = true;
+    this.renderTask4();
+    this.saveState();
+
+    this.bottleneckTimer = window.setInterval(() => this.tickBottleneckSimulation(), 1000);
+  }
+
+  tickBottleneckSimulation() {
+    const capacity = this.normalizePositiveNumber(this.state.bottleneckCapacity, 3, 30);
+    const requests = this.normalizePositiveNumber(this.state.bottleneckRequests, 6, 30);
+    const available = this.state.bottleneckWaiting + requests;
+    const processed = Math.min(capacity, available);
+
+    this.state.bottleneckElapsed += 1;
+    const waitingAfterProcessing = Math.max(0, available - processed);
+
+    this.state.bottleneckProcessedThisSecond = processed;
+    this.state.bottleneckProcessedTotal += processed;
+    this.state.bottleneckWaiting = Math.min(30, waitingAfterProcessing);
+    this.state.bottleneckHistory.push({
+      second: this.state.bottleneckElapsed,
+      incoming: requests,
+      processed,
+      waiting: this.state.bottleneckWaiting
+    });
+    this.state.bottleneckHistory = this.state.bottleneckHistory.slice(-10);
+
+    if (waitingAfterProcessing >= 30) {
+      this.state.bottleneckAborted = true;
+      this.stopBottleneckSimulation('');
+    }
+
+    this.renderTask4();
+    this.saveState();
+  }
+
+  stopBottleneckSimulation(message) {
+    this.clearBottleneckTimer();
+    this.renderTask4();
+    if (message) {
+      this.setFeedback(this.task4Feedback, message, '');
+    }
+  }
+
+  resetBottleneckSimulation() {
+    this.stopBottleneckSimulation('');
+    this.resetBottleneckCounters();
+    this.renderTask4();
+    this.saveState();
+  }
+
+  clearBottleneckTimer() {
+    if (this.bottleneckTimer) {
+      window.clearInterval(this.bottleneckTimer);
+      this.bottleneckTimer = null;
+    }
+    this.state.bottleneckRunning = false;
+  }
+
+  resetBottleneckCounters() {
+    this.state.bottleneckElapsed = 0;
+    this.state.bottleneckWaiting = 0;
+    this.state.bottleneckProcessedThisSecond = 0;
+    this.state.bottleneckProcessedTotal = 0;
+    this.state.bottleneckRunning = false;
+    this.state.bottleneckAborted = false;
+    this.state.bottleneckHistory = [];
+  }
+
+  normalizePositiveNumber(rawValue, fallback, max) {
+    const value = Number(rawValue);
+    if (!Number.isFinite(value)) {
+      return fallback;
+    }
+    return Math.max(1, Math.min(max, Math.floor(value)));
   }
 
   renderSimulator() {
@@ -566,12 +700,16 @@ end`
     this.accValue.textContent = String(sim.acc);
     this.aluValue.textContent = sim.alu || 'wartet';
     this.ioInputValue.textContent = sim.pendingInputCell ? `wartet auf ${sim.pendingInputCell}` : 'bereit';
-    this.ioOutputValue.textContent = sim.output.length ? String(sim.output[sim.output.length - 1]) : '-';
+    this.ioOutputValue.textContent = sim.output.length ? sim.output.join(', ') : '-';
     this.currentBusText.textContent = sim.busText;
 
     this.renderMemory();
     this.renderProgramLines();
-    this.moveBusPacket(sim.busFrom, sim.busTo, sim.ir && sim.ir !== '-' ? sim.ir : 'Bus');
+    if (sim.busVisible) {
+      this.moveBusPacket(sim.busFrom, sim.busTo, sim.ir && sim.ir !== '-' ? sim.ir : 'Bus');
+    } else {
+      this.hideBusPacket();
+    }
 
     const statusType = sim.error ? 'error' : (sim.halted ? 'success' : '');
     const statusText = sim.error || (sim.halted ? 'Programm beendet.' : (sim.pendingInputCell ? `Eingabe für ${sim.pendingInputCell} erforderlich.` : 'Bereit für den nächsten Schritt.'));
@@ -599,9 +737,7 @@ end`
     lines.forEach((line, index) => {
       const row = document.createElement('div');
       row.className = 'program-line';
-      const activeIndex = this.state.simulator.pendingInputCell
-        ? this.state.simulator.activeLine
-        : this.state.simulator.pc;
+      const activeIndex = this.state.simulator.activeLine;
       if (index === activeIndex && !this.state.simulator.halted) {
         row.classList.add('active');
       }
@@ -613,6 +749,13 @@ end`
   renderExtensionTasks() {
     this.extensionTasksContainer.innerHTML = '';
     const levels = ['Leicht', 'Mittel', 'Schwer'];
+    const completed = new Set(this.state.completedTasks);
+    const activeTask = this.getActiveTask();
+
+    const activeResult = activeTask ? this.state.taskResults[activeTask.id] : null;
+    this.activeTaskBox.textContent = activeTask
+      ? `Aktiv: ${activeTask.title}. ${activeTask.test}${activeResult?.length ? ` Letzte Ausgabe: ${activeResult.join(', ')}.` : ''}`
+      : 'Keine Aufgabe ausgewählt.';
 
     levels.forEach((level) => {
       const tasks = this.extensionTasks.filter((task) => task.level === level);
@@ -628,8 +771,18 @@ end`
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'extension-task';
-        button.innerHTML = `<strong>${task.title}</strong>${task.text}`;
-        button.addEventListener('click', () => this.loadProgram(task.program));
+        button.classList.toggle('completed', completed.has(task.id));
+        button.classList.toggle('current', this.state.activeTaskId === task.id);
+        const result = this.state.taskResults[task.id];
+        const resultLine = result?.length ? `<small class="task-result">Letzte Ausgabe: ${result.join(', ')}</small>` : '';
+        button.innerHTML = `
+          <strong>${task.title}</strong>
+          <span>${task.text}</span>
+          <small>${task.test}</small>
+          ${resultLine}
+          <em>${completed.has(task.id) ? 'geschafft' : 'bearbeiten'}</em>
+        `;
+        button.addEventListener('click', () => this.selectExtensionTask(task.id));
         group.appendChild(button);
       });
 
@@ -637,10 +790,79 @@ end`
     });
   }
 
+  selectExtensionTask(taskId) {
+    const task = this.extensionTasks.find((entry) => entry.id === taskId);
+    if (!task) {
+      return;
+    }
+
+    this.saveCurrentTaskProgram();
+    this.stopAutoRun('');
+    this.state.activeTaskId = taskId;
+    this.state.simulator = this.createFreshSimulatorState(this.state.taskPrograms[taskId] || '');
+    this.renderSimulator();
+    this.renderExtensionTasks();
+    this.saveState();
+  }
+
+  saveCurrentTaskProgram() {
+    if (!this.state.activeTaskId) {
+      return;
+    }
+    this.state.taskPrograms[this.state.activeTaskId] = this.programEditor?.value ?? this.state.simulator.program;
+    this.state.taskResults[this.state.activeTaskId] = [...this.state.simulator.output];
+  }
+
+  getActiveTask() {
+    return this.extensionTasks.find((task) => task.id === this.state.activeTaskId) || null;
+  }
+
+  checkActiveTaskCompletion() {
+    const task = this.getActiveTask();
+    if (!task) {
+      return;
+    }
+
+    const output = this.state.simulator.output;
+    this.state.taskResults[task.id] = [...output];
+    const solved = output.length === task.expectedOutput.length
+      && output.every((value, index) => Number(value) === Number(task.expectedOutput[index]));
+
+    if (!solved || this.state.completedTasks.includes(task.id)) {
+      return;
+    }
+
+    this.state.completedTasks.push(task.id);
+    this.setStatus(`Aufgabe "${task.title}" geschafft.`, 'success');
+    this.renderExtensionTasks();
+  }
+
+  renderCommandGlossary() {
+    this.commandGlossaryList.innerHTML = '';
+    this.commandGlossary.forEach((entry) => {
+      const item = document.createElement('article');
+      item.className = 'command-item';
+      item.innerHTML = `<h3>${entry.command}</h3><p>${entry.text}</p>`;
+      this.commandGlossaryList.appendChild(item);
+    });
+  }
+
+  showCommandGlossary() {
+    this.commandGlossaryModal.hidden = false;
+    this.closeCommandGlossary.focus();
+  }
+
+  hideCommandGlossary() {
+    this.commandGlossaryModal.hidden = true;
+    this.openCommandGlossary.focus();
+  }
+
   updateProgramFromEditor() {
     this.state.simulator.program = this.programEditor.value;
+    this.saveCurrentTaskProgram();
     this.softResetMachineState();
     this.renderSimulator();
+    this.renderExtensionTasks();
     this.saveState();
   }
 
@@ -669,18 +891,22 @@ end`
     sim.lastChangedCell = cell;
     sim.pendingInputCell = '';
     sim.inputDraft = '';
-    sim.activeLine = sim.pc;
+    sim.activeLine = Math.max(0, sim.pc - 1);
     sim.error = '';
     sim.alu = 'Eingabe gespeichert';
     this.setBus('io', 'memory', `Ein-/Ausgabe sendet ${value} über den Bus an Speicherzelle ${cell}.`);
+    this.checkActiveTaskCompletion();
     this.renderSimulator();
     this.saveState();
   }
 
   loadProgram(program) {
+    this.saveCurrentTaskProgram();
     this.stopAutoRun('');
+    this.state.activeTaskId = '';
     this.state.simulator = this.createFreshSimulatorState(program);
     this.renderSimulator();
+    this.renderExtensionTasks();
     this.saveState();
   }
 
@@ -766,6 +992,7 @@ end`
       sim.pc += 1;
       sim.lastChangedCell = '';
       this.executeInstruction(instruction);
+      this.checkActiveTaskCompletion();
     } catch (error) {
       sim.error = error.message || 'Das Programm konnte nicht ausgeführt werden.';
       sim.halted = true;
@@ -862,6 +1089,7 @@ end`
     const sim = this.state.simulator;
     sim.busFrom = from;
     sim.busTo = to;
+    sim.busVisible = true;
     sim.busText = `Fetch: Speicherwerk → Steuerwerk. Ausführen: ${text}`;
   }
 
@@ -933,20 +1161,39 @@ end`
     this.busPacket.textContent = label;
     this.busMoveTimers.forEach((timer) => window.clearTimeout(timer));
     this.busMoveTimers = [];
+    const moveToken = (this.busMoveToken += 1);
 
     this.busPacket.style.transition = 'none';
+    this.busPacket.style.opacity = '1';
     this.busPacket.style.left = start.left;
     this.busPacket.style.top = start.top;
 
     window.requestAnimationFrame(() => {
+      if (moveToken !== this.busMoveToken) {
+        return;
+      }
       this.busPacket.style.transition = 'left 320ms linear, top 320ms linear, opacity 180ms ease';
       this.busPacket.style.left = center.left;
       this.busPacket.style.top = center.top;
 
       this.busMoveTimers.push(window.setTimeout(() => {
+        if (moveToken !== this.busMoveToken) {
+          return;
+        }
         this.busPacket.style.left = end.left;
         this.busPacket.style.top = end.top;
       }, 330));
+    });
+  }
+
+  hideBusPacket() {
+    this.busMoveTimers.forEach((timer) => window.clearTimeout(timer));
+    this.busMoveTimers = [];
+    this.busMoveToken += 1;
+    this.busPacket.textContent = '';
+    this.busPacket.style.opacity = '0';
+    document.querySelectorAll('.sim-unit').forEach((unit) => {
+      unit.classList.remove('active');
     });
   }
 
@@ -968,8 +1215,17 @@ end`
   }
 
   buildSerializableState() {
+    const taskPrograms = { ...this.state.taskPrograms };
+    const taskResults = { ...this.state.taskResults };
+    if (this.state.activeTaskId) {
+      taskPrograms[this.state.activeTaskId] = this.programEditor?.value ?? this.state.simulator.program;
+      taskResults[this.state.activeTaskId] = [...this.state.simulator.output];
+    }
+
     return {
       ...this.state,
+      taskPrograms,
+      taskResults,
       savedAt: new Date().toISOString(),
       simulator: {
         ...this.state.simulator,
@@ -991,6 +1247,10 @@ end`
       ...savedState,
       assignments: savedState.assignments && typeof savedState.assignments === 'object' ? savedState.assignments : {},
       clozeAnswers: savedState.clozeAnswers && typeof savedState.clozeAnswers === 'object' ? savedState.clozeAnswers : {},
+      taskPrograms: savedState.taskPrograms && typeof savedState.taskPrograms === 'object' ? savedState.taskPrograms : {},
+      taskResults: savedState.taskResults && typeof savedState.taskResults === 'object' ? savedState.taskResults : {},
+      completedTasks: Array.isArray(savedState.completedTasks) ? savedState.completedTasks : [],
+      bottleneckHistory: Array.isArray(savedState.bottleneckHistory) ? savedState.bottleneckHistory.slice(-10) : [],
       simulator: {
         ...fresh.simulator,
         ...(savedState.simulator && typeof savedState.simulator === 'object' ? savedState.simulator : {})
@@ -1008,8 +1268,14 @@ end`
     if (typeof this.state.simulator.pendingInputCell !== 'string') {
       this.state.simulator.pendingInputCell = '';
     }
-    this.state.bottleneckCapacity = Math.max(1, Math.min(6, Number(this.state.bottleneckCapacity) || 3));
-    this.state.bottleneckRequests = Math.max(1, Math.min(12, Number(this.state.bottleneckRequests) || 8));
+    this.state.bottleneckCapacity = this.normalizePositiveNumber(this.state.bottleneckCapacity, 3, 30);
+    this.state.bottleneckRequests = this.normalizePositiveNumber(this.state.bottleneckRequests, 6, 30);
+    this.state.bottleneckRunning = false;
+    Object.keys(this.state.taskResults).forEach((taskId) => {
+      if (!Array.isArray(this.state.taskResults[taskId])) {
+        delete this.state.taskResults[taskId];
+      }
+    });
     this.state.simulator.activeLine = Math.max(0, Number(this.state.simulator.activeLine) || 0);
 
     this.isRestoring = false;

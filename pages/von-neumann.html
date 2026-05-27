@@ -88,54 +88,65 @@
         <div class="bottleneck-lab" id="bottleneckLab">
           <div class="bottleneck-controls">
             <div>
-              <label class="range-control" for="capacitySlider">
+              <label class="range-control" for="capacityInput">
                 <span>Bus schafft pro Sekunde</span>
-                <strong id="capacityCountLabel">3</strong>
               </label>
-              <input id="capacitySlider" type="range" min="1" max="6" value="3" />
+              <input id="capacityInput" type="number" min="1" max="30" value="3" inputmode="numeric" />
             </div>
             <div>
-              <label class="range-control" for="requestSlider">
+              <label class="range-control" for="requestInput">
                 <span>Anfragen pro Sekunde</span>
-                <strong id="requestCountLabel">8</strong>
               </label>
-              <input id="requestSlider" type="range" min="1" max="12" value="8" />
+              <input id="requestInput" type="number" min="1" max="30" value="6" inputmode="numeric" />
             </div>
+          </div>
+
+          <div class="action-row bottleneck-actions">
+            <button class="vn-btn" id="bottleneckStartBtn" type="button">Simulation starten</button>
+            <button class="vn-btn ghost" id="bottleneckStopBtn" type="button">Stopp</button>
+            <button class="vn-btn ghost" id="bottleneckResetBtn" type="button">Zurücksetzen</button>
           </div>
 
           <div class="bottleneck-model" aria-label="Von-Neumann-Flaschenhals Modell">
             <div class="request-pool">
-              <span>Befehle und Daten kommen an</span>
+              <span><strong>Start:</strong> Befehle und Daten kommen an</span>
               <div class="request-queue" id="requestQueue"></div>
             </div>
             <div class="single-bus" aria-hidden="true">
+              <span class="bus-end bus-start">Start</span>
               <span class="bus-direction">ein Bus, eine Richtung</span>
-              <span class="bottleneck-packet" id="bottleneckPacket">3/s</span>
+              <span class="bottleneck-packet" id="bottleneckPacket">3</span>
+              <span class="bus-end bus-finish">Ziel</span>
             </div>
             <div class="bus-target">
-              <span>werden verarbeitet</span>
-              <strong id="processedCount">3</strong>
+              <span><strong>Ziel:</strong> verarbeitet in dieser Sekunde</span>
+              <strong id="processedCount">0</strong>
             </div>
           </div>
 
           <div class="bottleneck-stats">
             <div>
-              <span>warten pro Sekunde</span>
-              <strong id="waitingCount">5</strong>
+              <span>Zeit</span>
+              <strong id="bottleneckTime">0 s</strong>
+            </div>
+            <div>
+              <span>warten insgesamt</span>
+              <strong id="waitingCount">0</strong>
             </div>
             <div>
               <span>Bus-Auslastung</span>
-              <strong id="busLoadText">100%</strong>
+              <strong id="busLoadText">0%</strong>
             </div>
             <div>
               <span>Wartespeicher</span>
-              <strong id="memoryFillText">voll</strong>
+              <strong id="memoryFillText">0%</strong>
             </div>
             <div class="load-meter" aria-hidden="true">
               <span id="busLoadBar"></span>
             </div>
           </div>
           <div class="memory-buffer" id="memoryBuffer" aria-label="Wartespeicher"></div>
+          <div class="bottleneck-history" id="bottleneckHistory" aria-live="polite"></div>
         </div>
         <div class="feedback-box" id="task4Feedback" aria-live="polite"></div>
       </article>
@@ -150,6 +161,7 @@
             Schreibe ein kleines Programm oder starte mit dem Beispiel. Mit jedem Schritt siehst du,
             welches Werk gerade über den Bus Daten austauscht.
           </p>
+          <button class="vn-btn ghost" id="openCommandGlossary" type="button">Befehle anzeigen</button>
         </div>
         <div class="sim-status" id="simFeedback" aria-live="polite">Bereit.</div>
       </div>
@@ -218,10 +230,21 @@
       <section class="task-panel" aria-label="Zusatzaufgaben">
         <h3>Aufgaben</h3>
         <p>Starte eine Aufgabe und prüfe mit eigenen Eingaben, ob dein Programm passt.</p>
+        <div class="active-task-box" id="activeTaskBox">Keine Aufgabe ausgewählt.</div>
         <div class="extension-list" id="extensionTasks"></div>
       </section>
     </section>
   </main>
+
+  <div class="modal-overlay" id="commandGlossaryModal" hidden>
+    <section class="command-modal" role="dialog" aria-modal="true" aria-labelledby="commandGlossaryTitle">
+      <div class="modal-header">
+        <h2 id="commandGlossaryTitle">Befehle für die Simulation</h2>
+        <button class="close-btn" id="closeCommandGlossary" type="button" aria-label="Glossar schließen">&times;</button>
+      </div>
+      <div class="command-list" id="commandGlossaryList"></div>
+    </section>
+  </div>
 
   <footer class="footer">
     <p>&copy; 2026 Martin-Andersen-Nexö-Gymnasium Dresden</p>

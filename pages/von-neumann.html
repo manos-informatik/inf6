@@ -82,24 +82,16 @@
           <h2>Bus und Flaschenhals</h2>
         </div>
         <p class="compact-copy">
-          Vergleiche, wie viele Befehle und Daten pro Sekunde durch den Bus passen und wie viele
-          Anfragen pro Sekunde wirklich gestellt werden. Die Leistung des Computers wird gedrosselt,
-          da zunächst vorhandene Anfragen bearbeitet werden müssen.
+          Beide Rechner bearbeiten denselben Algorithmus. Der Von-Neumann-Rechner nutzt nur einen
+          gemeinsamen Bus, ein moderner Computer kann mehrere Busse gleichzeitig verwenden.
         </p>
         <div class="bottleneck-lab" id="bottleneckLab">
           <div class="bottleneck-controls">
-            <div>
-              <label class="range-control" for="capacityInput">
-                <span>Bus schafft pro Sekunde</span>
-              </label>
-              <input id="capacityInput" type="number" min="1" max="5" value="3" inputmode="numeric" />
-            </div>
-            <div>
-              <label class="range-control" for="requestInput">
-                <span>Anfragen pro Sekunde</span>
-              </label>
-              <input id="requestInput" type="number" min="1" max="10" value="6" inputmode="numeric" />
-            </div>
+            <label class="range-control" for="algorithmSlider">
+              <span>Befehle im Algorithmus</span>
+              <strong id="algorithmCountLabel">12</strong>
+            </label>
+            <input id="algorithmSlider" type="range" min="4" max="24" value="12" />
           </div>
 
           <div class="action-row bottleneck-actions">
@@ -108,46 +100,52 @@
             <button class="vn-btn ghost" id="bottleneckResetBtn" type="button">Zurücksetzen</button>
           </div>
 
-          <div class="bottleneck-model" aria-label="Von-Neumann-Flaschenhals Modell">
-            <div class="request-pool">
-              <span><strong>Start:</strong> Befehle und Daten kommen an</span>
-              <div class="request-queue" id="requestQueue"></div>
-            </div>
-            <div class="single-bus" aria-hidden="true">
-              <span class="bus-end bus-start">Start</span>
-              <span class="bus-direction">ein Bus, eine Richtung</span>
-              <span class="bottleneck-packet" id="bottleneckPacket">3</span>
-              <span class="bus-end bus-finish">Ziel</span>
-            </div>
-            <div class="bus-target">
-              <span><strong>Ziel:</strong> verarbeitet in dieser Sekunde</span>
-              <strong id="processedCount">0</strong>
-            </div>
-          </div>
+          <div class="compare-machines" aria-label="Vergleich von Von-Neumann-Rechner und modernem Computer">
+            <section class="machine-card von-neumann-machine">
+              <div class="machine-card-head">
+                <div>
+                  <h3>Von-Neumann-Rechner</h3>
+                  <p>1 gemeinsamer Bus für Daten und Befehle</p>
+                </div>
+                <strong id="vnTime">0 s</strong>
+              </div>
+              <div class="machine-bus one-bus" aria-hidden="true">
+                <span>Start</span>
+                <div class="bus-lane active-lane"></div>
+                <span>Ziel</span>
+              </div>
+              <div class="algorithm-queue" id="vnQueue" aria-label="Von-Neumann Algorithmusfortschritt"></div>
+              <div class="machine-progress">
+                <span id="vnProgressText">0 von 12</span>
+                <div><span id="vnProgressBar"></span></div>
+              </div>
+            </section>
 
-          <div class="bottleneck-stats">
-            <div>
-              <span>Zeit</span>
-              <strong id="bottleneckTime">0 s</strong>
-            </div>
-            <div>
-              <span>warten insgesamt</span>
-              <strong id="waitingCount">0</strong>
-            </div>
-            <div>
-              <span>Bus-Auslastung</span>
-              <strong id="busLoadText">0%</strong>
-            </div>
-            <div>
-              <span>Wartespeicher</span>
-              <strong id="memoryFillText">0%</strong>
-            </div>
-            <div class="load-meter" aria-hidden="true">
-              <span id="busLoadBar"></span>
-            </div>
+            <section class="machine-card modern-machine">
+              <div class="machine-card-head">
+                <div>
+                  <h3>Moderner Computer</h3>
+                  <p>4 Busse können parallel arbeiten</p>
+                </div>
+                <strong id="modernTime">0 s</strong>
+              </div>
+              <div class="machine-bus multi-bus" aria-hidden="true">
+                <span>Start</span>
+                <div>
+                  <i class="bus-lane active-lane"></i>
+                  <i class="bus-lane active-lane"></i>
+                  <i class="bus-lane active-lane"></i>
+                  <i class="bus-lane active-lane"></i>
+                </div>
+                <span>Ziel</span>
+              </div>
+              <div class="algorithm-queue" id="modernQueue" aria-label="Moderner Algorithmusfortschritt"></div>
+              <div class="machine-progress">
+                <span id="modernProgressText">0 von 12</span>
+                <div><span id="modernProgressBar"></span></div>
+              </div>
+            </section>
           </div>
-          <div class="memory-buffer" id="memoryBuffer" aria-label="Wartespeicher"></div>
-          <div class="bottleneck-history" id="bottleneckHistory" aria-live="polite"></div>
         </div>
         <div class="feedback-box" id="task4Feedback" aria-live="polite"></div>
       </article>

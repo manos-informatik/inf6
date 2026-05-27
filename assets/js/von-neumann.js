@@ -102,8 +102,10 @@ end`;
       { command: 'end', text: 'Beendet das Programm.' }
     ];
 
-    this.maxBottleneckCapacity = 5;
-    this.maxBottleneckRequests = 10;
+    this.minAlgorithmSteps = 4;
+    this.maxAlgorithmSteps = 24;
+    this.vonNeumannBusCount = 1;
+    this.modernBusCount = 4;
 
     this.state = this.createInitialState();
     this.selectedComponent = null;
@@ -131,15 +133,13 @@ end`;
       clozeAnswers: {},
       task3Solved: false,
       task3Revealed: false,
-      bottleneckCapacity: 3,
-      bottleneckRequests: 6,
+      bottleneckAlgorithmSize: 12,
       bottleneckElapsed: 0,
-      bottleneckWaiting: 0,
-      bottleneckProcessedThisSecond: 0,
-      bottleneckProcessedTotal: 0,
+      bottleneckVonNeumannDone: 0,
+      bottleneckModernDone: 0,
+      bottleneckVonNeumannFinishedAt: null,
+      bottleneckModernFinishedAt: null,
       bottleneckRunning: false,
-      bottleneckAborted: false,
-      bottleneckHistory: [],
       activeTaskId: '',
       taskPrograms: {},
       taskResults: {},
@@ -189,18 +189,16 @@ end`;
     this.task2Feedback = document.getElementById('task2Feedback');
     this.clozeText = document.getElementById('clozeText');
     this.task3Feedback = document.getElementById('task3Feedback');
-    this.capacityInput = document.getElementById('capacityInput');
-    this.requestInput = document.getElementById('requestInput');
-    this.requestQueue = document.getElementById('requestQueue');
-    this.processedCount = document.getElementById('processedCount');
-    this.waitingCount = document.getElementById('waitingCount');
-    this.bottleneckTime = document.getElementById('bottleneckTime');
-    this.busLoadText = document.getElementById('busLoadText');
-    this.busLoadBar = document.getElementById('busLoadBar');
-    this.memoryFillText = document.getElementById('memoryFillText');
-    this.memoryBuffer = document.getElementById('memoryBuffer');
-    this.bottleneckHistory = document.getElementById('bottleneckHistory');
-    this.bottleneckPacket = document.getElementById('bottleneckPacket');
+    this.algorithmSlider = document.getElementById('algorithmSlider');
+    this.algorithmCountLabel = document.getElementById('algorithmCountLabel');
+    this.vnTime = document.getElementById('vnTime');
+    this.modernTime = document.getElementById('modernTime');
+    this.vnQueue = document.getElementById('vnQueue');
+    this.modernQueue = document.getElementById('modernQueue');
+    this.vnProgressText = document.getElementById('vnProgressText');
+    this.modernProgressText = document.getElementById('modernProgressText');
+    this.vnProgressBar = document.getElementById('vnProgressBar');
+    this.modernProgressBar = document.getElementById('modernProgressBar');
     this.bottleneckStartBtn = document.getElementById('bottleneckStartBtn');
     this.bottleneckStopBtn = document.getElementById('bottleneckStopBtn');
     this.bottleneckResetBtn = document.getElementById('bottleneckResetBtn');
@@ -293,10 +291,7 @@ end`;
       this.saveState();
     });
 
-    this.capacityInput.addEventListener('input', () => this.updateBottleneckDraft());
-    this.requestInput.addEventListener('input', () => this.updateBottleneckDraft());
-    this.capacityInput.addEventListener('change', () => this.updateBottleneckSettings());
-    this.requestInput.addEventListener('change', () => this.updateBottleneckSettings());
+    this.algorithmSlider.addEventListener('input', () => this.updateAlgorithmSize());
     this.bottleneckStartBtn.addEventListener('click', () => this.startBottleneckSimulation());
     this.bottleneckStopBtn.addEventListener('click', () => this.stopBottleneckSimulation('Simulation gestoppt.'));
     this.bottleneckResetBtn.addEventListener('click', () => this.resetBottleneckSimulation());
@@ -680,12 +675,123 @@ end`;
     this.state.bottleneckHistory = [];
   }
 
+  renderTask4() {
+    const steps = this.normalizeAlgorithmSize(this.state.bottleneckAlgorithmSize);
+    const vnDone = Math.min(steps, Math.max(0, Number(this.state.bottleneckVonNeumannDone) || 0));
+    const modernDone = Math.min(steps, Math.max(0, Number(this.state.bottleneckModernDone) || 0));
+    const vnPercent = Math.round((vnDone / steps) * 100);
+    const modernPercent = Math.round((modernDone / steps) * 100);
+
+    this.algorithmSlider.value = String(steps);
+    this.algorithmCountLabel.textContent = String(steps);
+    this.vnTime.textContent = this.state.bottleneckVonNeumannFinishedAt
+      ? `${this.state.bottleneckVonNeumannFinishedAt} s`
+      : `${this.state.bottleneckElapsed} s`;
+    this.modernTime.textContent = this.state.bottleneckModernFinishedAt
+      ? `${this.state.bottleneckModernFinishedAt} s`
+      : `${this.state.bottleneckElapsed} s`;
+    this.vnProgressText.textContent = `${vnDone} von ${steps}`;
+    this.modernProgressText.textContent = `${modernDone} von ${steps}`;
+    this.vnProgressBar.style.width = `${vnPercent}%`;
+    this.modernProgressBar.style.width = `${modernPercent}%`;
+    this.bottleneckStartBtn.disabled = this.state.bottleneckRunning || (vnDone >= steps && modernDone >= steps);
+    this.bottleneckStopBtn.disabled = !this.state.bottleneckRunning;
+
+    this.renderAlgorithmQueue(this.vnQueue, steps, vnDone, this.vonNeumannBusCount);
+    this.renderAlgorithmQueue(this.modernQueue, steps, modernDone, this.modernBusCount);
+
+    if (vnDone >= steps && modernDone >= steps) {
+      this.setFeedback(this.task4Feedback, `Der moderne Computer ist nach ${this.state.bottleneckModernFinishedAt} Sekunden fertig, der Von-Neumann-Rechner nach ${this.state.bottleneckVonNeumannFinishedAt} Sekunden. Da sich Daten und Befehle denselben Datenbus teilen, kann es zum Von-Neumann-Flaschenhals kommen: Immer nur eine Anfrage kann zwischen den Werken durch den Bus geschoben werden.`, 'success');
+    } else if (this.state.bottleneckElapsed === 0) {
+      this.setFeedback(this.task4Feedback, `Der Algorithmus hat ${steps} Befehle. Starte die Simulation und vergleiche einen gemeinsamen Bus mit vier parallelen Bussen.`, '');
+    } else if (modernDone >= steps) {
+      this.setFeedback(this.task4Feedback, 'Der moderne Computer ist fertig, während der Von-Neumann-Rechner weiter über seinen einen gemeinsamen Bus arbeitet.', '');
+    } else {
+      this.setFeedback(this.task4Feedback, 'Beide arbeiten am gleichen Algorithmus. Der moderne Computer nutzt mehrere Busse parallel, der Von-Neumann-Rechner muss die Befehle nacheinander über einen gemeinsamen Bus schicken.', '');
+    }
+  }
+
+  renderAlgorithmQueue(container, steps, done, activeWidth) {
+    container.innerHTML = '';
+    for (let index = 1; index <= steps; index += 1) {
+      const item = document.createElement('span');
+      item.className = 'algorithm-step';
+      if (index <= done) {
+        item.classList.add('done');
+      } else if (this.state.bottleneckRunning && index <= done + activeWidth) {
+        item.classList.add('active');
+      }
+      item.textContent = String(index);
+      container.appendChild(item);
+    }
+  }
+
+  updateAlgorithmSize() {
+    this.clearBottleneckTimer();
+    this.state.bottleneckAlgorithmSize = this.normalizeAlgorithmSize(this.algorithmSlider.value);
+    this.resetBottleneckCounters();
+    this.renderTask4();
+    this.saveState();
+  }
+
+  startBottleneckSimulation() {
+    const steps = this.normalizeAlgorithmSize(this.state.bottleneckAlgorithmSize);
+    if (this.state.bottleneckRunning || this.state.bottleneckVonNeumannDone >= steps) {
+      return;
+    }
+
+    this.state.bottleneckAlgorithmSize = steps;
+    this.state.bottleneckRunning = true;
+    this.renderTask4();
+    this.saveState();
+
+    this.bottleneckTimer = window.setInterval(() => this.tickBottleneckSimulation(), 800);
+  }
+
+  tickBottleneckSimulation() {
+    const steps = this.normalizeAlgorithmSize(this.state.bottleneckAlgorithmSize);
+    this.state.bottleneckElapsed += 1;
+    this.state.bottleneckVonNeumannDone = Math.min(steps, this.state.bottleneckVonNeumannDone + this.vonNeumannBusCount);
+    this.state.bottleneckModernDone = Math.min(steps, this.state.bottleneckModernDone + this.modernBusCount);
+
+    if (this.state.bottleneckModernDone >= steps && !this.state.bottleneckModernFinishedAt) {
+      this.state.bottleneckModernFinishedAt = this.state.bottleneckElapsed;
+    }
+    if (this.state.bottleneckVonNeumannDone >= steps && !this.state.bottleneckVonNeumannFinishedAt) {
+      this.state.bottleneckVonNeumannFinishedAt = this.state.bottleneckElapsed;
+    }
+
+    if (this.state.bottleneckVonNeumannDone >= steps) {
+      this.stopBottleneckSimulation('');
+    }
+
+    this.renderTask4();
+    this.saveState();
+  }
+
+  resetBottleneckCounters() {
+    this.state.bottleneckElapsed = 0;
+    this.state.bottleneckVonNeumannDone = 0;
+    this.state.bottleneckModernDone = 0;
+    this.state.bottleneckVonNeumannFinishedAt = null;
+    this.state.bottleneckModernFinishedAt = null;
+    this.state.bottleneckRunning = false;
+  }
+
   normalizePositiveNumber(rawValue, fallback, max) {
     const value = Number(rawValue);
     if (!Number.isFinite(value)) {
       return fallback;
     }
     return Math.max(1, Math.min(max, Math.floor(value)));
+  }
+
+  normalizeAlgorithmSize(rawValue) {
+    const value = Number(rawValue);
+    if (!Number.isFinite(value)) {
+      return 12;
+    }
+    return Math.max(this.minAlgorithmSteps, Math.min(this.maxAlgorithmSteps, Math.floor(value)));
   }
 
   renderSimulator() {
@@ -1253,7 +1359,9 @@ end`;
       taskPrograms: savedState.taskPrograms && typeof savedState.taskPrograms === 'object' ? savedState.taskPrograms : {},
       taskResults: savedState.taskResults && typeof savedState.taskResults === 'object' ? savedState.taskResults : {},
       completedTasks: Array.isArray(savedState.completedTasks) ? savedState.completedTasks : [],
-      bottleneckHistory: Array.isArray(savedState.bottleneckHistory) ? savedState.bottleneckHistory.slice(-10) : [],
+      bottleneckHistory: Array.isArray(savedState.bottleneckHistory)
+        ? savedState.bottleneckHistory.filter((entry) => Number.isFinite(Number(entry?.vnDone)) && Number.isFinite(Number(entry?.modernDone))).slice(-10)
+        : [],
       simulator: {
         ...fresh.simulator,
         ...(savedState.simulator && typeof savedState.simulator === 'object' ? savedState.simulator : {})
@@ -1271,8 +1379,12 @@ end`;
     if (typeof this.state.simulator.pendingInputCell !== 'string') {
       this.state.simulator.pendingInputCell = '';
     }
-    this.state.bottleneckCapacity = this.normalizePositiveNumber(this.state.bottleneckCapacity, 3, this.maxBottleneckCapacity);
-    this.state.bottleneckRequests = this.normalizePositiveNumber(this.state.bottleneckRequests, 6, this.maxBottleneckRequests);
+    this.state.bottleneckAlgorithmSize = this.normalizeAlgorithmSize(this.state.bottleneckAlgorithmSize);
+    this.state.bottleneckElapsed = Math.max(0, Number(this.state.bottleneckElapsed) || 0);
+    this.state.bottleneckVonNeumannDone = Math.min(this.state.bottleneckAlgorithmSize, Math.max(0, Number(this.state.bottleneckVonNeumannDone) || 0));
+    this.state.bottleneckModernDone = Math.min(this.state.bottleneckAlgorithmSize, Math.max(0, Number(this.state.bottleneckModernDone) || 0));
+    this.state.bottleneckVonNeumannFinishedAt = Number.isFinite(Number(this.state.bottleneckVonNeumannFinishedAt)) ? Number(this.state.bottleneckVonNeumannFinishedAt) : null;
+    this.state.bottleneckModernFinishedAt = Number.isFinite(Number(this.state.bottleneckModernFinishedAt)) ? Number(this.state.bottleneckModernFinishedAt) : null;
     this.state.bottleneckRunning = false;
     Object.keys(this.state.taskResults).forEach((taskId) => {
       if (!Array.isArray(this.state.taskResults[taskId])) {

@@ -304,8 +304,8 @@ select:focus {
 
 .bottleneck-controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.55rem;
 }
 
 .bottleneck-lab input[type="range"] {
@@ -325,6 +325,161 @@ select:focus {
   cursor: not-allowed;
   filter: grayscale(0.2);
   opacity: 0.6;
+}
+
+.compare-machines {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.machine-card {
+  border: 1px solid rgba(96, 165, 250, 0.34);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.66);
+  padding: 0.85rem;
+}
+
+.machine-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: start;
+  margin-bottom: 0.75rem;
+}
+
+.machine-card h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.05rem;
+}
+
+.machine-card p {
+  margin: 0.2rem 0 0;
+  color: var(--vn-muted);
+  line-height: 1.35;
+}
+
+.machine-card-head > strong {
+  flex: 0 0 auto;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  border-radius: 999px;
+  color: #dff9ff;
+  background: rgba(8, 47, 73, 0.4);
+  padding: 0.28rem 0.58rem;
+}
+
+.machine-bus {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.machine-bus > span {
+  color: var(--vn-muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.multi-bus > div {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.bus-lane {
+  position: relative;
+  display: block;
+  height: 0.46rem;
+  border-radius: 999px;
+  background: rgba(34, 211, 238, 0.18);
+  overflow: hidden;
+}
+
+.bus-lane::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--vn-cyan), var(--vn-green));
+  opacity: 0;
+  transform: translateX(-70%);
+}
+
+.machine-card:has(.algorithm-step.active) .active-lane::after {
+  opacity: 1;
+  animation: busLaneMove 800ms linear infinite;
+}
+
+@keyframes busLaneMove {
+  from { transform: translateX(-80%); }
+  to { transform: translateX(100%); }
+}
+
+.algorithm-queue {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.1rem, 1fr));
+  gap: 0.32rem;
+  margin-bottom: 0.75rem;
+}
+
+.algorithm-step {
+  display: grid;
+  place-items: center;
+  min-height: 2rem;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 8px;
+  color: #dbeafe;
+  background: rgba(15, 23, 42, 0.78);
+  font-weight: 850;
+}
+
+.algorithm-step.active {
+  border-color: rgba(251, 191, 36, 0.85);
+  background: rgba(251, 191, 36, 0.16);
+  color: #fff3c4;
+}
+
+.algorithm-step.done {
+  border-color: rgba(16, 185, 129, 0.72);
+  background: rgba(16, 185, 129, 0.18);
+  color: #c9f7df;
+}
+
+.machine-progress {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.machine-progress > span {
+  color: var(--vn-muted);
+  font-weight: 800;
+}
+
+.machine-progress > div {
+  height: 0.75rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  overflow: hidden;
+}
+
+.machine-progress > div span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--vn-cyan), var(--vn-green));
+  transition: width 180ms ease;
+}
+
+.von-neumann-machine {
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.von-neumann-machine .machine-progress > div span {
+  background: linear-gradient(90deg, var(--vn-yellow), var(--vn-red));
 }
 
 .bottleneck-model {
@@ -554,22 +709,6 @@ select:focus {
 .memory-slot.danger {
   border-color: rgba(251, 113, 133, 0.9);
   background: linear-gradient(165deg, rgba(251, 113, 133, 0.9), rgba(220, 38, 38, 0.78));
-}
-
-.bottleneck-history {
-  display: grid;
-  gap: 0.35rem;
-  margin-top: 0.7rem;
-  color: rgba(226, 232, 240, 0.84);
-  font-size: 0.92rem;
-}
-
-.bottleneck-history p {
-  margin: 0;
-  border: 1px solid rgba(100, 116, 139, 0.24);
-  border-radius: 8px;
-  background: rgba(15, 23, 42, 0.48);
-  padding: 0.42rem 0.55rem;
 }
 
 .simulator-section {
@@ -1068,6 +1207,7 @@ input {
   .matching-layout,
   .sim-header,
   .bottleneck-controls,
+  .compare-machines,
   .bottleneck-model,
   .bottleneck-stats {
     grid-template-columns: 1fr;

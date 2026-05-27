@@ -26,6 +26,40 @@ const getPageKey = () => {
   return fromPath || 'landing';
 };
 
+const getCurrentPageState = () => {
+  const provider = window.TC6PageState;
+  if (!provider || typeof provider.collectProgress !== 'function') {
+    return null;
+  }
+
+  try {
+    const state = provider.collectProgress();
+    return state && typeof state === 'object' ? state : null;
+  } catch {
+    return null;
+  }
+};
+
+const restoreCurrentPageState = (progress) => {
+  const provider = window.TC6PageState;
+  if (!provider || typeof provider.restoreProgress !== 'function') {
+    return false;
+  }
+
+  const pageKey = getPageKey();
+  const pageState = progress?.pages?.[pageKey]?.pageState;
+  if (!pageState || typeof pageState !== 'object') {
+    return false;
+  }
+
+  try {
+    provider.restoreProgress(pageState);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const normalizeProgress = (raw) => {
   const base = {
     version: 2,
@@ -79,17 +113,44 @@ const markCurrentPageVisited = () => {
   const progress = readStoredProgress();
   const pageKey = getPageKey();
   const current = progress.pages[pageKey] || {};
+  const pageState = getCurrentPageState();
 
   progress.pages[pageKey] = {
+    ...current,
     visited: true,
     visits: (current.visits || 0) + 1,
     lastVisited: new Date().toISOString()
+  };
+
+  if (pageState) {
+    progress.pages[pageKey].pageState = pageState;
+  }
+
+  writeStoredProgress(progress);
+};
+
+const saveCurrentPageState = () => {
+  const pageState = getCurrentPageState();
+  if (!pageState) {
+    return;
+  }
+
+  const progress = readStoredProgress();
+  const pageKey = getPageKey();
+  const current = progress.pages[pageKey] || {};
+
+  progress.pages[pageKey] = {
+    ...current,
+    visited: true,
+    pageState,
+    lastSavedState: new Date().toISOString()
   };
 
   writeStoredProgress(progress);
 };
 
 const downloadProgressFile = () => {
+  saveCurrentPageState();
   const progress = readStoredProgress();
   const formatted = `${JSON.stringify(progress, null, 2)}\n`;
   const blob = new Blob([formatted], { type: 'application/json' });
@@ -116,6 +177,7 @@ const applyLoadedProgress = (loadedData) => {
 
   writeStoredProgress(progress);
   markCurrentPageVisited();
+  restoreCurrentPageState(progress);
   setProgressMessage('Fortschritt aus JSON geladen.');
 };
 
@@ -146,6 +208,15 @@ const setupProgressActions = () => {
       }
     });
   }
+};
+
+window.TC6Progress = {
+  readStoredProgress,
+  writeStoredProgress,
+  markCurrentPageVisited,
+  saveCurrentPageState,
+  restoreCurrentPageState,
+  getPageKey
 };
 
 markCurrentPageVisited();

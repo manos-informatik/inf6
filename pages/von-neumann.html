@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Von-Neumann-Rechner - Coming soon</title>
+  <title>Von-Neumann-Rechner</title>
   <link rel="icon" type="image/png" href="../assets/images/favicon.png" />
   <link rel="stylesheet" href="../assets/css/main.css" />
+  <link rel="stylesheet" href="../assets/css/von-neumann.css" />
 </head>
 <body data-page-key="von-neumann">
-  <header class="hero">
+  <header class="hero vn-hero">
     <div class="progress-toolbar" aria-label="Fortschritt Aktionen">
       <button class="progress-btn" id="saveProgressBtn" type="button">Fortschritt speichern ↑</button>
       <button class="progress-btn" id="loadProgressBtn" type="button">Fortschritt laden ↓</button>
@@ -17,24 +18,216 @@
       <span class="progress-message" id="progressMessage" aria-live="polite"></span>
     </div>
 
-    <div class="hero-inner">
+    <div class="hero-inner vn-hero-inner">
       <div>
-        <p class="eyebrow">Coming soon</p>
+        <p class="eyebrow">Technisch Computer</p>
         <h1>Von-Neumann-Rechner</h1>
-        <p class="intro blurred">
-          Dieser Bereich wird als nächstes ausgebaut. Geplant sind Erklärungen
-          zum EVA-Prinzip und dazu, wie Steuerwerk, Rechenwerk und Speicher
-          zusammenarbeiten.
+        <p class="intro">
+          Arbeite dich in kleinen Schritten durch die Bauteile, Vorteile und den Bus.
+          Danach kannst du einen einfachen Rechner selbst ausführen lassen.
         </p>
       </div>
       <div class="mascot-wrap" aria-hidden="true">
-        <img class="mascot" src="../assets/images/byte/Byte_Happy.png" alt="" />
+        <img class="mascot" src="../assets/images/byte/Byte_Thinking.png" alt="" />
+        <span class="speech">Ich zeige dir, wie Befehle durch den Rechner wandern.</span>
       </div>
     </div>
   </header>
+
+  <main class="container vn-page">
+    <section class="worksheet-grid" aria-label="Arbeitsblattstationen">
+      <article class="vn-card worksheet-card" id="task2-card">
+        <div class="card-heading">
+          <p class="station-label">Aufgabe 2</p>
+          <h2>Funktionen zuordnen</h2>
+        </div>
+        <p class="compact-copy">
+          Klicke zuerst auf eine Komponente und dann auf die passende Funktion.
+        </p>
+        <div class="matching-layout">
+          <div>
+            <h3>Komponenten</h3>
+            <div class="choice-list" id="componentBank"></div>
+          </div>
+          <div>
+            <h3>Funktionen</h3>
+            <div class="target-list" id="functionTargets"></div>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="vn-btn" id="task2Check" type="button">Prüfen</button>
+        </div>
+        <div class="feedback-box" id="task2Feedback" aria-live="polite"></div>
+      </article>
+
+      <article class="vn-card worksheet-card" id="task3-card">
+        <div class="card-heading">
+          <p class="station-label">Aufgabe 3</p>
+          <h2>Vorteile ergänzen</h2>
+        </div>
+        <p class="compact-copy">
+          Wähle passende Wörter aus. Die Sätze sind so kurz, dass du sie gut aufs Blatt übertragen kannst.
+        </p>
+        <div class="cloze-text" id="clozeText"></div>
+        <div class="action-row">
+          <button class="vn-btn" id="task3Check" type="button">Prüfen</button>
+          <button class="vn-btn ghost" id="task3Reveal" type="button">Lösung anzeigen</button>
+        </div>
+        <div class="feedback-box" id="task3Feedback" aria-live="polite"></div>
+      </article>
+
+      <article class="vn-card worksheet-card" id="task4-card">
+        <div class="card-heading">
+          <p class="station-label">Aufgabe 4</p>
+          <h2>Bus und Flaschenhals</h2>
+        </div>
+        <p class="compact-copy">
+          Vergleiche, wie viele Befehle und Daten pro Sekunde durch den Bus passen und wie viele
+          Anfragen pro Sekunde wirklich gestellt werden. Wenn zu viel gleichzeitig los ist, staut es sich.
+        </p>
+        <div class="bottleneck-lab" id="bottleneckLab">
+          <div class="bottleneck-controls">
+            <div>
+              <label class="range-control" for="capacitySlider">
+                <span>Bus schafft pro Sekunde</span>
+                <strong id="capacityCountLabel">3</strong>
+              </label>
+              <input id="capacitySlider" type="range" min="1" max="6" value="3" />
+            </div>
+            <div>
+              <label class="range-control" for="requestSlider">
+                <span>Anfragen pro Sekunde</span>
+                <strong id="requestCountLabel">8</strong>
+              </label>
+              <input id="requestSlider" type="range" min="1" max="12" value="8" />
+            </div>
+          </div>
+
+          <div class="bottleneck-model" aria-label="Von-Neumann-Flaschenhals Modell">
+            <div class="request-pool">
+              <span>Befehle und Daten kommen an</span>
+              <div class="request-queue" id="requestQueue"></div>
+            </div>
+            <div class="single-bus" aria-hidden="true">
+              <span class="bus-direction">ein Bus, eine Richtung</span>
+              <span class="bottleneck-packet" id="bottleneckPacket">3/s</span>
+            </div>
+            <div class="bus-target">
+              <span>werden verarbeitet</span>
+              <strong id="processedCount">3</strong>
+            </div>
+          </div>
+
+          <div class="bottleneck-stats">
+            <div>
+              <span>warten pro Sekunde</span>
+              <strong id="waitingCount">5</strong>
+            </div>
+            <div>
+              <span>Bus-Auslastung</span>
+              <strong id="busLoadText">100%</strong>
+            </div>
+            <div>
+              <span>Wartespeicher</span>
+              <strong id="memoryFillText">voll</strong>
+            </div>
+            <div class="load-meter" aria-hidden="true">
+              <span id="busLoadBar"></span>
+            </div>
+          </div>
+          <div class="memory-buffer" id="memoryBuffer" aria-label="Wartespeicher"></div>
+        </div>
+        <div class="feedback-box" id="task4Feedback" aria-live="polite"></div>
+      </article>
+    </section>
+
+    <section class="vn-card simulator-section" aria-labelledby="sim-title">
+      <div class="sim-header">
+        <div>
+          <p class="station-label">Simulation</p>
+          <h2 id="sim-title">Ein einfacher Von-Neumann-Rechner</h2>
+          <p class="compact-copy">
+            Schreibe ein kleines Programm oder starte mit dem Beispiel. Mit jedem Schritt siehst du,
+            welches Werk gerade über den Bus Daten austauscht.
+          </p>
+        </div>
+        <div class="sim-status" id="simFeedback" aria-live="polite">Bereit.</div>
+      </div>
+
+      <div class="simulator-grid">
+        <section class="program-panel" aria-label="Programm">
+          <label class="field-label" for="programEditor">Programm</label>
+          <textarea id="programEditor" spellcheck="false"></textarea>
+          <label class="field-label" for="inputQueue">Aktuelle Eingabe</label>
+          <div class="input-row">
+            <input id="inputQueue" type="number" inputmode="numeric" placeholder="Warte auf in ..." disabled />
+            <button class="vn-btn" id="submitInputBtn" type="button" disabled>Übernehmen</button>
+          </div>
+          <p class="helper-text" id="inputHint">Starte das Programm. Bei einem in-Befehl fragt der Rechner nach einer Zahl.</p>
+          <div class="action-row sim-controls">
+            <button class="vn-btn" id="loadExampleBtn" type="button">Beispiel laden</button>
+            <button class="vn-btn" id="stepBtn" type="button">Einzelschritt</button>
+            <button class="vn-btn" id="runBtn" type="button">Auto-Lauf</button>
+            <button class="vn-btn ghost" id="stopBtn" type="button">Stopp</button>
+            <button class="vn-btn ghost" id="resetSimBtn" type="button">Zurücksetzen</button>
+          </div>
+          <div class="program-lines" id="programLines" aria-label="Programmschritte"></div>
+        </section>
+
+        <section class="sim-board" id="simBoard" aria-label="Von-Neumann-Simulationsbrett">
+          <div class="bus-packet" id="busPacket">Bus</div>
+          <div class="main-bus" aria-hidden="true">
+            <span class="bus-connector memory-connector"></span>
+            <span class="bus-connector control-connector"></span>
+            <span class="bus-connector alu-connector"></span>
+            <span class="bus-connector io-connector"></span>
+          </div>
+          <article class="sim-unit memory-unit" data-unit="memory">
+            <h3>Speicherwerk</h3>
+            <div class="memory-grid" id="memoryCells"></div>
+          </article>
+
+          <article class="sim-unit control-unit" data-unit="control">
+            <h3>Steuerwerk</h3>
+            <dl class="register-list">
+              <div><dt>Befehlszähler</dt><dd id="pcValue">0</dd></div>
+              <div><dt>Befehlsregister</dt><dd id="irValue">-</dd></div>
+            </dl>
+          </article>
+
+          <article class="sim-unit alu-unit" data-unit="alu">
+            <h3>Rechenwerk</h3>
+            <dl class="register-list">
+              <div><dt>Akku</dt><dd id="accValue">0</dd></div>
+              <div><dt>ALU</dt><dd id="aluValue">wartet</dd></div>
+            </dl>
+          </article>
+
+          <article class="sim-unit io-unit" data-unit="io">
+            <h3>Ein-/Ausgabe</h3>
+            <dl class="register-list">
+              <div><dt>Eingabe</dt><dd id="ioInputValue">8, 12</dd></div>
+              <div><dt>Ausgabe</dt><dd id="ioOutputValue">-</dd></div>
+            </dl>
+          </article>
+
+          <div class="bus-label" id="currentBusText">Der Bus wartet auf den nächsten Schritt.</div>
+        </section>
+      </div>
+
+      <section class="task-panel" aria-label="Zusatzaufgaben">
+        <h3>Aufgaben</h3>
+        <p>Starte eine Aufgabe und prüfe mit eigenen Eingaben, ob dein Programm passt.</p>
+        <div class="extension-list" id="extensionTasks"></div>
+      </section>
+    </section>
+  </main>
+
   <footer class="footer">
     <p>&copy; 2026 Martin-Andersen-Nexö-Gymnasium Dresden</p>
   </footer>
+
   <script src="../assets/js/progress.js"></script>
+  <script src="../assets/js/von-neumann.js"></script>
 </body>
 </html>

@@ -102,6 +102,9 @@ end`;
       { command: 'end', text: 'Beendet das Programm.' }
     ];
 
+    this.maxBottleneckCapacity = 5;
+    this.maxBottleneckRequests = 10;
+
     this.state = this.createInitialState();
     this.selectedComponent = null;
     this.runTimer = null;
@@ -508,8 +511,8 @@ end`;
   }
 
   renderTask4() {
-    const capacity = this.normalizePositiveNumber(this.state.bottleneckCapacity, 3, 30);
-    const requests = this.normalizePositiveNumber(this.state.bottleneckRequests, 6, 30);
+    const capacity = this.normalizePositiveNumber(this.state.bottleneckCapacity, 3, this.maxBottleneckCapacity);
+    const requests = this.normalizePositiveNumber(this.state.bottleneckRequests, 6, this.maxBottleneckRequests);
     const memoryLimit = 30;
     const load = Math.min(100, Math.round((requests / capacity) * 100));
     const memoryPercent = Math.min(100, Math.round((this.state.bottleneckWaiting / memoryLimit) * 100));
@@ -529,7 +532,7 @@ end`;
     this.bottleneckStopBtn.disabled = !this.state.bottleneckRunning;
 
     this.requestQueue.innerHTML = '';
-    for (let index = 1; index <= Math.min(requests, 30); index += 1) {
+    for (let index = 1; index <= Math.min(requests, this.maxBottleneckRequests); index += 1) {
       const chip = document.createElement('span');
       chip.className = `request-chip${index > capacity ? ' waiting' : ' passing'}`;
       chip.textContent = index <= capacity ? '✓' : String(index - capacity);
@@ -575,8 +578,8 @@ end`;
 
   updateBottleneckSettings() {
     this.clearBottleneckTimer();
-    this.state.bottleneckCapacity = this.normalizePositiveNumber(this.capacityInput.value, 3, 30);
-    this.state.bottleneckRequests = this.normalizePositiveNumber(this.requestInput.value, 6, 30);
+    this.state.bottleneckCapacity = this.normalizePositiveNumber(this.capacityInput.value, 3, this.maxBottleneckCapacity);
+    this.state.bottleneckRequests = this.normalizePositiveNumber(this.requestInput.value, 6, this.maxBottleneckRequests);
     this.resetBottleneckCounters();
     this.renderTask4();
     this.saveState();
@@ -588,10 +591,10 @@ end`;
     const capacity = Number(this.capacityInput.value);
     const requests = Number(this.requestInput.value);
     if (Number.isFinite(capacity) && capacity > 0) {
-      this.state.bottleneckCapacity = Math.min(30, Math.floor(capacity));
+      this.state.bottleneckCapacity = Math.min(this.maxBottleneckCapacity, Math.floor(capacity));
     }
     if (Number.isFinite(requests) && requests > 0) {
-      this.state.bottleneckRequests = Math.min(30, Math.floor(requests));
+      this.state.bottleneckRequests = Math.min(this.maxBottleneckRequests, Math.floor(requests));
     }
 
     this.resetBottleneckCounters();
@@ -606,8 +609,8 @@ end`;
       return;
     }
 
-    this.state.bottleneckCapacity = this.normalizePositiveNumber(this.capacityInput.value, 3, 30);
-    this.state.bottleneckRequests = this.normalizePositiveNumber(this.requestInput.value, 6, 30);
+    this.state.bottleneckCapacity = this.normalizePositiveNumber(this.capacityInput.value, 3, this.maxBottleneckCapacity);
+    this.state.bottleneckRequests = this.normalizePositiveNumber(this.requestInput.value, 6, this.maxBottleneckRequests);
     this.state.bottleneckRunning = true;
     this.renderTask4();
     this.saveState();
@@ -616,8 +619,8 @@ end`;
   }
 
   tickBottleneckSimulation() {
-    const capacity = this.normalizePositiveNumber(this.state.bottleneckCapacity, 3, 30);
-    const requests = this.normalizePositiveNumber(this.state.bottleneckRequests, 6, 30);
+    const capacity = this.normalizePositiveNumber(this.state.bottleneckCapacity, 3, this.maxBottleneckCapacity);
+    const requests = this.normalizePositiveNumber(this.state.bottleneckRequests, 6, this.maxBottleneckRequests);
     const available = this.state.bottleneckWaiting + requests;
     const processed = Math.min(capacity, available);
 
@@ -1268,8 +1271,8 @@ end`;
     if (typeof this.state.simulator.pendingInputCell !== 'string') {
       this.state.simulator.pendingInputCell = '';
     }
-    this.state.bottleneckCapacity = this.normalizePositiveNumber(this.state.bottleneckCapacity, 3, 30);
-    this.state.bottleneckRequests = this.normalizePositiveNumber(this.state.bottleneckRequests, 6, 30);
+    this.state.bottleneckCapacity = this.normalizePositiveNumber(this.state.bottleneckCapacity, 3, this.maxBottleneckCapacity);
+    this.state.bottleneckRequests = this.normalizePositiveNumber(this.state.bottleneckRequests, 6, this.maxBottleneckRequests);
     this.state.bottleneckRunning = false;
     Object.keys(this.state.taskResults).forEach((taskId) => {
       if (!Array.isArray(this.state.taskResults[taskId])) {

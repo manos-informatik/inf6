@@ -1159,6 +1159,60 @@ button.danger:hover {
     line-height: 1.6;
     margin-bottom: 24px;
 }
+
+.mission-review {
+    display: grid;
+    gap: 14px;
+}
+
+.mission-review-content {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    padding: 14px;
+    color: var(--text-primary);
+    line-height: 1.55;
+}
+
+.mission-review-content p,
+.mission-review-content ol {
+    margin: 0 0 12px;
+}
+
+.mission-review-content p:last-child,
+.mission-review-content ol:last-child {
+    margin-bottom: 0;
+}
+
+.mission-review-content h4 {
+    margin: 0 0 8px;
+    color: var(--accent-primary);
+}
+
+.review-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.review-pill {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(35, 134, 54, 0.45);
+    border-radius: 999px;
+    background: rgba(35, 134, 54, 0.14);
+    color: var(--text-primary);
+    padding: 4px 10px;
+    margin: 2px;
+    font-weight: 700;
+}
+
+.mission-review-success {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
 .continue-btn {
     background: var(--accent-primary);
     color: white;

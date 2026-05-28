@@ -1,9 +1,14 @@
 class SoftwareLayerVisualizer {
     constructor() {
+        this.storageKey = 'tc6-hard-software-state-v1';
         this.currentMission = 0;
         this.completedMissions = new Set();
         this.exploredLayers = new Set();
         this.selectedAssignItem = null;
+        this.compareSolved = false;
+        this.compareSelections = {};
+        this.portQuizSolved = false;
+        this.isRestoring = false;
 
         // ===== GLOSSARY DATA =====
         this.glossary = [
@@ -342,7 +347,89 @@ class SoftwareLayerVisualizer {
         this._clozeCorrect = false;
         this._matchingCorrect = false;
 
+        this.registerProgressBridge();
+        this.restoreSavedState();
         this.init();
+        this.saveState();
+    }
+
+    registerProgressBridge() {
+        window.TC6PageState = {
+            collectProgress: () => this.buildSerializableState(),
+            restoreProgress: (state) => this.applySerializableState(state, { render: true })
+        };
+    }
+
+    buildSerializableState() {
+        return {
+            version: 1,
+            savedAt: new Date().toISOString(),
+            currentMission: this.currentMission,
+            completedMissions: Array.from(this.completedMissions),
+            exploredLayers: Array.from(this.exploredLayers),
+            compareSolved: this.compareSolved,
+            compareSelections: { ...this.compareSelections },
+            portQuizSolved: this.portQuizSolved
+        };
+    }
+
+    restoreSavedState() {
+        try {
+            const raw = localStorage.getItem(this.storageKey);
+            if (raw) {
+                this.applySerializableState(JSON.parse(raw), { render: false });
+            }
+        } catch {
+            // Keep the page usable if storage is unavailable or corrupted.
+        }
+    }
+
+    applySerializableState(state, options = {}) {
+        if (!state || typeof state !== 'object') return;
+        this.isRestoring = true;
+
+        if (Number.isInteger(state.currentMission)) {
+            this.currentMission = Math.max(0, Math.min(this.missions.length - 1, state.currentMission));
+        }
+        if (Array.isArray(state.completedMissions)) {
+            this.completedMissions = new Set(
+                state.completedMissions.filter(index => Number.isInteger(index) && index >= 0 && index < this.missions.length)
+            );
+        }
+        if (Array.isArray(state.exploredLayers)) {
+            this.exploredLayers = new Set(
+                state.exploredLayers.filter(layer => ['app', 'os', 'driver', 'hardware'].includes(layer))
+            );
+        }
+        this.compareSolved = state.compareSolved === true;
+        this.compareSelections = state.compareSelections && typeof state.compareSelections === 'object'
+            ? { ...state.compareSelections }
+            : {};
+        this.portQuizSolved = state.portQuizSolved === true;
+
+        this.isRestoring = false;
+
+        if (options.render) {
+            this.restoreExploredLayerMarkers();
+            this.renderCompareTable();
+            this.renderPortQuiz();
+            this.updateMission();
+        }
+    }
+
+    saveState() {
+        if (this.isRestoring) return;
+        const state = this.buildSerializableState();
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify(state));
+        } catch {
+            // Ignore storage failures in restricted environments.
+        }
+        try {
+            window.TC6Progress?.saveCurrentPageState?.();
+        } catch {
+            // Optional progress bridge.
+        }
     }
 
     // ===========================
@@ -354,6 +441,7 @@ class SoftwareLayerVisualizer {
         this.updateMission();
         this.renderGlossaryModal();
         this.initExploration();
+        this.restoreExploredLayerMarkers();
     }
 
     bindEvents() {
@@ -427,6 +515,13 @@ class SoftwareLayerVisualizer {
 
         // Check if mission is completed
         this.checkMission();
+        this.saveState();
+    }
+
+    restoreExploredLayerMarkers() {
+        this.exploredLayers.forEach(layerId => {
+            document.querySelector(`.layer[data-layer="${layerId}"]`)?.classList.add('explored');
+        });
     }
 
     // ===========================
@@ -612,6 +707,35 @@ class SoftwareLayerVisualizer {
             { id: 'ps2', label: 'PS/2', img: '../assets/images/ports/ps2.svg' }
         ];
 
+        if (this.portQuizSolved) {
+            area.innerHTML = '';
+            const grid = document.createElement('div');
+            grid.className = 'port-grid solved-port-grid';
+            ports.forEach(port => {
+                const card = document.createElement('div');
+                card.className = 'port-card assigned correct';
+                const img = document.createElement('img');
+                img.src = port.img;
+                img.alt = 'Schnittstelle';
+                img.draggable = false;
+                card.appendChild(img);
+                const badge = document.createElement('div');
+                badge.className = 'port-badge';
+                badge.textContent = port.label;
+                card.appendChild(badge);
+                grid.appendChild(card);
+            });
+            area.appendChild(grid);
+
+            let existing = area.parentElement.querySelector('.port-feedback');
+            if (existing) existing.remove();
+            const fb = document.createElement('div');
+            fb.className = 'port-feedback sort-feedback quiz-score pass';
+            fb.textContent = 'Schnittstellen gelöst - deine richtigen Zuordnungen bleiben gespeichert.';
+            area.parentElement.appendChild(fb);
+            return;
+        }
+
         // Shuffle images order
         const shuffledPorts = [...ports].sort(() => Math.random() - 0.5);
         // Shuffle labels independently
@@ -739,7 +863,29 @@ class SoftwareLayerVisualizer {
         checkBtn.className = 'matching-check-btn';
         checkBtn.textContent = '\u2714 Pr\u00fcfen';
         checkBtn.style.display = 'none';
-        checkBtn.addEventListener('click', () => {
+        wrapper.querySelectorAll('select').forEach(sel => {
+            const key = `${sel.dataset.row}:${sel.dataset.col}`;
+            if (this.compareSolved) {
+                sel.classList.add('correct');
+                return;
+            }
+            sel.addEventListener('change', () => {
+                this.compareSelections[key] = sel.value;
+                this.saveState();
+            });
+        });
+
+        if (this.compareSolved) {
+            feedbackEl.className = 'compare-feedback pass';
+            feedbackEl.textContent = 'Tabelle gelöst - deine richtigen Antworten bleiben gespeichert.';
+            checkBtn.disabled = true;
+            checkBtn.textContent = 'Tabelle gelöst';
+            return;
+        }
+
+        checkBtn.disabled = false;
+        checkBtn.textContent = 'âœ” Tabelle prÃ¼fen';
+        checkBtn.onclick = () => {
             let correct = 0;
             const cards = area.querySelectorAll('.port-card');
             shuffledPorts.forEach((port, i) => {
@@ -765,7 +911,7 @@ class SoftwareLayerVisualizer {
                 fb.textContent = `${correct} von ${ports.length} richtig \u2013 die rot markierten sind falsch. Setze zur\u00fcck und versuche es erneut!`;
             }
             area.parentElement.appendChild(fb);
-        });
+        };
         btnRow.appendChild(checkBtn);
         area.appendChild(btnRow);
 
@@ -808,9 +954,11 @@ class SoftwareLayerVisualizer {
 
         const makeSelect = (cell, rowIdx, col) => {
             const shuffled = [...cell.options].sort(() => Math.random() - 0.5);
-            return `<select data-row="${rowIdx}" data-col="${col}" data-correct="${cell.correct}">
+            const key = `${rowIdx}:${col}`;
+            const selectedValue = this.compareSolved ? cell.correct : (this.compareSelections[key] || '');
+            return `<select data-row="${rowIdx}" data-col="${col}" data-correct="${cell.correct}" ${this.compareSolved ? 'disabled' : ''}>
                 <option value="">- wählen -</option>
-                ${shuffled.map(o => `<option value="${o}">${o}</option>`).join('')}
+                ${shuffled.map(o => `<option value="${o}" ${o === selectedValue ? 'selected' : ''}>${o}</option>`).join('')}
             </select>`;
         };
 
@@ -833,12 +981,35 @@ class SoftwareLayerVisualizer {
             </tbody>
         </table>`;
 
-        checkBtn.addEventListener('click', () => {
+        wrapper.querySelectorAll('select').forEach(sel => {
+            const key = `${sel.dataset.row}:${sel.dataset.col}`;
+            if (this.compareSolved) {
+                sel.classList.add('correct');
+                return;
+            }
+            sel.addEventListener('change', () => {
+                this.compareSelections[key] = sel.value;
+                this.saveState();
+            });
+        });
+
+        if (this.compareSolved) {
+            feedbackEl.className = 'compare-feedback pass';
+            feedbackEl.textContent = 'Tabelle gelöst - deine richtigen Antworten bleiben gespeichert.';
+            checkBtn.disabled = true;
+            checkBtn.textContent = 'Tabelle gelöst';
+            return;
+        }
+
+        checkBtn.disabled = false;
+        checkBtn.textContent = 'Tabelle prüfen';
+        checkBtn.onclick = () => {
             let allCorrect = true;
             let totalCells = 0;
             let correctCells = 0;
             wrapper.querySelectorAll('select').forEach(sel => {
                 totalCells++;
+                this.compareSelections[`${sel.dataset.row}:${sel.dataset.col}`] = sel.value;
                 sel.classList.remove('correct', 'incorrect');
                 if (sel.value === sel.dataset.correct) {
                     sel.classList.add('correct');
@@ -852,7 +1023,283 @@ class SoftwareLayerVisualizer {
             feedbackEl.textContent = allCorrect
                 ? `🎉 Perfekt! Alle ${totalCells} Felder sind richtig!`
                 : `${correctCells} / ${totalCells} richtig - die rot markierten Felder stimmen noch nicht. Versuch es nochmal!`;
+            if (allCorrect) {
+                this.compareSolved = true;
+                wrapper.querySelectorAll('select').forEach(sel => {
+                    sel.disabled = true;
+                    this.compareSelections[`${sel.dataset.row}:${sel.dataset.col}`] = sel.dataset.correct;
+                });
+                checkBtn.disabled = true;
+                checkBtn.textContent = 'Tabelle gelöst';
+            }
+            this.saveState();
+        };
+    }
+
+    renderPortQuiz() {
+        const area = document.getElementById('port-quiz-area');
+        if (!area) return;
+
+        const ports = [
+            { id: 'usb-a-2', label: 'USB-A 2.0', img: '../assets/images/ports/usb-a-2.svg' },
+            { id: 'usb-a-3', label: 'USB-A 3.0', img: '../assets/images/ports/usb-a-3.svg' },
+            { id: 'usb-c', label: 'USB-C', img: '../assets/images/ports/usb-c.svg' },
+            { id: 'displayport', label: 'DisplayPort', img: '../assets/images/ports/displayport.svg' },
+            { id: 'hdmi', label: 'HDMI', img: '../assets/images/ports/hdmi.svg' },
+            { id: 'dvi', label: 'DVI', img: '../assets/images/ports/dvi.svg' },
+            { id: 'vga', label: 'VGA', img: '../assets/images/ports/vga.svg' },
+            { id: 'rj45', label: 'RJ45 (Netzwerk)', img: '../assets/images/ports/rj45.svg' },
+            { id: 'audio', label: 'Audio (3,5 mm)', img: '../assets/images/ports/audio.svg' },
+            { id: 'ps2', label: 'PS/2', img: '../assets/images/ports/ps2.svg' }
+        ];
+
+        const setPortFeedback = (text, pass) => {
+            let existing = area.parentElement.querySelector('.port-feedback');
+            if (existing) existing.remove();
+            const fb = document.createElement('div');
+            fb.className = `port-feedback sort-feedback quiz-score ${pass ? 'pass' : 'fail'}`;
+            fb.textContent = text;
+            area.parentElement.appendChild(fb);
+        };
+
+        if (this.portQuizSolved) {
+            area.innerHTML = '';
+            const grid = document.createElement('div');
+            grid.className = 'port-grid solved-port-grid';
+            ports.forEach(port => {
+                const card = document.createElement('div');
+                card.className = 'port-card assigned correct';
+                const img = document.createElement('img');
+                img.src = port.img;
+                img.alt = 'Schnittstelle';
+                img.draggable = false;
+                card.appendChild(img);
+                const badge = document.createElement('div');
+                badge.className = 'port-badge';
+                badge.textContent = port.label;
+                card.appendChild(badge);
+                grid.appendChild(card);
+            });
+            area.appendChild(grid);
+            setPortFeedback('Schnittstellen gelöst - deine richtigen Zuordnungen bleiben gespeichert.', true);
+            return;
+        }
+
+        area.innerHTML = '';
+        const shuffledPorts = [...ports].sort(() => Math.random() - 0.5);
+        const shuffledLabels = [...ports].sort(() => Math.random() - 0.5);
+        const assigned = {};
+        let selectedLabel = null;
+
+        const labelBar = document.createElement('div');
+        labelBar.className = 'port-label-bar';
+        const grid = document.createElement('div');
+        grid.className = 'port-grid';
+        const btnRow = document.createElement('div');
+        btnRow.className = 'port-btn-row';
+
+        const render = () => {
+            labelBar.innerHTML = '';
+            shuffledLabels.forEach(port => {
+                const chip = document.createElement('span');
+                chip.className = 'port-label-chip';
+                chip.textContent = port.label;
+                const isUsed = Object.values(assigned).some(a => a.id === port.id);
+                if (isUsed) chip.classList.add('used');
+                if (selectedLabel?.id === port.id) chip.classList.add('selected');
+                chip.addEventListener('click', () => {
+                    if (isUsed) return;
+                    selectedLabel = port;
+                    render();
+                });
+                labelBar.appendChild(chip);
+            });
+
+            grid.innerHTML = '';
+            shuffledPorts.forEach(port => {
+                const card = document.createElement('div');
+                card.className = 'port-card';
+                const img = document.createElement('img');
+                img.src = port.img;
+                img.alt = 'Schnittstelle';
+                img.draggable = false;
+                card.appendChild(img);
+                if (assigned[port.id]) {
+                    card.classList.add('assigned');
+                    const badge = document.createElement('div');
+                    badge.className = 'port-badge';
+                    badge.textContent = assigned[port.id].label;
+                    card.appendChild(badge);
+                }
+                card.addEventListener('click', () => {
+                    if (!selectedLabel || assigned[port.id]) return;
+                    assigned[port.id] = selectedLabel;
+                    selectedLabel = null;
+                    render();
+                    checkBtn.style.display = Object.keys(assigned).length === ports.length ? 'inline-block' : 'none';
+                });
+                grid.appendChild(card);
+            });
+        };
+
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'matching-reset-btn';
+        resetBtn.textContent = 'Zurücksetzen';
+        resetBtn.addEventListener('click', () => {
+            Object.keys(assigned).forEach(key => delete assigned[key]);
+            selectedLabel = null;
+            checkBtn.style.display = 'none';
+            setPortFeedback('', false);
+            area.parentElement.querySelector('.port-feedback')?.remove();
+            render();
         });
+
+        const checkBtn = document.createElement('button');
+        checkBtn.className = 'matching-check-btn';
+        checkBtn.textContent = 'Prüfen';
+        checkBtn.style.display = 'none';
+        checkBtn.addEventListener('click', () => {
+            let correct = 0;
+            grid.querySelectorAll('.port-card').forEach(card => card.classList.remove('correct', 'incorrect'));
+            shuffledPorts.forEach((port, index) => {
+                const card = grid.children[index];
+                if (assigned[port.id]?.id === port.id) {
+                    card.classList.add('correct');
+                    correct++;
+                } else if (assigned[port.id]) {
+                    card.classList.add('incorrect');
+                }
+            });
+
+            if (correct === ports.length) {
+                this.portQuizSolved = true;
+                this.saveState();
+                this.renderPortQuiz();
+            } else {
+                setPortFeedback(`${correct} von ${ports.length} richtig - die rot markierten sind falsch. Setze zurück und versuche es erneut!`, false);
+            }
+        });
+
+        btnRow.append(resetBtn, checkBtn);
+        area.append(labelBar, grid, btnRow);
+        render();
+    }
+
+    renderCompareTable() {
+        const wrapper = document.getElementById('compare-table-wrapper');
+        const checkBtn = document.getElementById('compare-check-btn');
+        const feedbackEl = document.getElementById('compare-feedback');
+        if (!wrapper || !checkBtn) return;
+
+        const rows = [
+            {
+                label: 'Was ist es?',
+                os: { correct: 'Die Verwaltungssoftware des Computers', options: ['Die Verwaltungssoftware des Computers', 'Ein Übersetzungsprogramm für Hardware', 'Ein Programm zum Arbeiten', 'Ein physisches Bauteil'] },
+                driver: { correct: 'Ein Übersetzungsprogramm für Hardware', options: ['Die Verwaltungssoftware des Computers', 'Ein Übersetzungsprogramm für Hardware', 'Ein Programm zum Arbeiten', 'Ein physisches Bauteil'] },
+                app: { correct: 'Ein Programm zum Arbeiten', options: ['Die Verwaltungssoftware des Computers', 'Ein Übersetzungsprogramm für Hardware', 'Ein Programm zum Arbeiten', 'Ein physisches Bauteil'] }
+            },
+            {
+                label: 'Typische Beispiele',
+                os: { correct: 'Windows, Linux, Android', options: ['Windows, Linux, Android', 'Druckertreiber, Grafiktreiber', 'Word, Spotify, Firefox', 'Festplatte, Maus, Drucker'] },
+                driver: { correct: 'Druckertreiber, Grafiktreiber', options: ['Windows, Linux, Android', 'Druckertreiber, Grafiktreiber', 'Word, Spotify, Firefox', 'Festplatte, Maus, Drucker'] },
+                app: { correct: 'Word, Spotify, Firefox', options: ['Windows, Linux, Android', 'Druckertreiber, Grafiktreiber', 'Word, Spotify, Firefox', 'Festplatte, Maus, Drucker'] }
+            },
+            {
+                label: 'Benutzt du es direkt?',
+                os: { correct: 'Teilweise (Dateien verwalten, Einstellungen)', options: ['Ja, ständig', 'Teilweise (Dateien verwalten, Einstellungen)', 'Nein, arbeitet im Hintergrund'] },
+                driver: { correct: 'Nein, arbeitet im Hintergrund', options: ['Ja, ständig', 'Teilweise (Dateien verwalten, Einstellungen)', 'Nein, arbeitet im Hintergrund'] },
+                app: { correct: 'Ja, ständig', options: ['Ja, ständig', 'Teilweise (Dateien verwalten, Einstellungen)', 'Nein, arbeitet im Hintergrund'] }
+            },
+            {
+                label: 'Was braucht es zum Laufen?',
+                os: { correct: 'Hardware (wird direkt darauf installiert)', options: ['Hardware (wird direkt darauf installiert)', 'Betriebssystem + Hardware', 'Betriebssystem + Treiber + Hardware'] },
+                driver: { correct: 'Betriebssystem + Hardware', options: ['Hardware (wird direkt darauf installiert)', 'Betriebssystem + Hardware', 'Betriebssystem + Treiber + Hardware'] },
+                app: { correct: 'Betriebssystem + Treiber + Hardware', options: ['Hardware (wird direkt darauf installiert)', 'Betriebssystem + Hardware', 'Betriebssystem + Treiber + Hardware'] }
+            }
+        ];
+
+        const makeSelect = (cell, rowIdx, col) => {
+            const key = `${rowIdx}:${col}`;
+            const selectedValue = this.compareSolved ? cell.correct : (this.compareSelections[key] || '');
+            return `<select data-row="${rowIdx}" data-col="${col}" data-correct="${cell.correct}" ${this.compareSolved ? 'disabled' : ''}>
+                <option value="">- wählen -</option>
+                ${cell.options.map(option => `<option value="${option}" ${option === selectedValue ? 'selected' : ''}>${option}</option>`).join('')}
+            </select>`;
+        };
+
+        wrapper.innerHTML = `<table class="compare-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th class="col-os">Betriebssystem</th>
+                    <th class="col-driver">Treiber</th>
+                    <th class="col-app">Anwendersoftware</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rows.map((row, rIdx) => `<tr>
+                    <td class="row-label">${row.label}</td>
+                    <td>${makeSelect(row.os, rIdx, 'os')}</td>
+                    <td>${makeSelect(row.driver, rIdx, 'driver')}</td>
+                    <td>${makeSelect(row.app, rIdx, 'app')}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>`;
+
+        wrapper.querySelectorAll('select').forEach(sel => {
+            const key = `${sel.dataset.row}:${sel.dataset.col}`;
+            if (this.compareSolved) {
+                sel.classList.add('correct');
+                return;
+            }
+            sel.addEventListener('change', () => {
+                this.compareSelections[key] = sel.value;
+                this.saveState();
+            });
+        });
+
+        if (this.compareSolved) {
+            feedbackEl.className = 'compare-feedback pass';
+            feedbackEl.textContent = 'Tabelle gelöst - deine richtigen Antworten bleiben gespeichert.';
+            checkBtn.disabled = true;
+            checkBtn.textContent = 'Tabelle gelöst';
+            return;
+        }
+
+        checkBtn.disabled = false;
+        checkBtn.textContent = 'Tabelle prüfen';
+        checkBtn.onclick = () => {
+            let allCorrect = true;
+            let totalCells = 0;
+            let correctCells = 0;
+            wrapper.querySelectorAll('select').forEach(sel => {
+                totalCells++;
+                this.compareSelections[`${sel.dataset.row}:${sel.dataset.col}`] = sel.value;
+                sel.classList.remove('correct', 'incorrect');
+                if (sel.value === sel.dataset.correct) {
+                    sel.classList.add('correct');
+                    correctCells++;
+                } else {
+                    sel.classList.add('incorrect');
+                    allCorrect = false;
+                }
+            });
+
+            feedbackEl.className = `compare-feedback ${allCorrect ? 'pass' : 'fail'}`;
+            feedbackEl.textContent = allCorrect
+                ? `Perfekt! Alle ${totalCells} Felder sind richtig.`
+                : `${correctCells} / ${totalCells} richtig - die rot markierten Felder stimmen noch nicht.`;
+            if (allCorrect) {
+                this.compareSolved = true;
+                wrapper.querySelectorAll('select').forEach(sel => {
+                    sel.disabled = true;
+                    this.compareSelections[`${sel.dataset.row}:${sel.dataset.col}`] = sel.dataset.correct;
+                });
+                checkBtn.disabled = true;
+                checkBtn.textContent = 'Tabelle gelöst';
+            }
+            this.saveState();
+        };
     }
 
     // ===========================
@@ -866,11 +1313,13 @@ class SoftwareLayerVisualizer {
             button.className = 'mission-btn';
             button.textContent = index + 1;
             button.title = mission.title;
+            if (this.completedMissions.has(index)) {
+                button.classList.add('completed');
+            }
             if (index === this.currentMission) {
                 button.classList.add('current');
-            } else if (this.completedMissions.has(index)) {
-                button.classList.add('completed');
-            } else if (index > this.getMaxUnlockedMission()) {
+            }
+            if (!this.completedMissions.has(index) && index !== this.currentMission && index > this.getMaxUnlockedMission()) {
                 button.classList.add('locked');
             }
             if (!button.classList.contains('locked')) {
@@ -894,6 +1343,7 @@ class SoftwareLayerVisualizer {
             this.currentMission = idx;
             this.updateMission();
             this.createMissionButtons();
+            this.saveState();
         }
     }
 
@@ -908,7 +1358,11 @@ class SoftwareLayerVisualizer {
             const byteMascot = document.getElementById('mission-byte-mascot');
             byteMascot.querySelector('img').src = '../assets/images/byte/Byte_Thinking.png';
             // Render exercise
-            this.renderExercise(m);
+            if (this.completedMissions.has(this.currentMission)) {
+                this.renderSolvedMission(m);
+            } else {
+                this.renderExercise(m);
+            }
         } else {
             document.getElementById('mission-content').textContent = '🎉 Alle Missionen erfüllt! Du bist ein Software-Schichten-Experte!';
         }
@@ -921,6 +1375,7 @@ class SoftwareLayerVisualizer {
             const m = this.missions[this.currentMission];
             if (m.check() && !this.completedMissions.has(this.currentMission)) {
                 this.completedMissions.add(this.currentMission);
+                this.saveState();
                 this.showMissionSuccess(m.success, m.timer);
             }
         }
@@ -988,6 +1443,7 @@ class SoftwareLayerVisualizer {
         }
         this.currentMission = next;
         this.updateMission();
+        this.saveState();
     }
 
     // ===========================
@@ -1005,6 +1461,81 @@ class SoftwareLayerVisualizer {
             case 'cloze': return this.renderCloze(mission);
             case 'matching': return this.renderMatching(mission);
         }
+    }
+
+    renderSolvedMission(mission) {
+        const area = document.getElementById('exercise-area');
+        const review = document.createElement('div');
+        review.className = 'mission-review';
+        review.innerHTML = `<div class="quiz-score pass">Diese Mission ist gelöst. Du kannst die Lösung hier nachschauen.</div>`;
+
+        const content = document.createElement('div');
+        content.className = 'mission-review-content';
+
+        if (mission.format === 'exploration') {
+            content.innerHTML = '<p>Alle vier Schichten wurden entdeckt: Anwendersoftware, Betriebssystem, Treiber und Hardware.</p>';
+        }
+
+        if (mission.format === 'assignment') {
+            const groups = mission.data.targets.map(target => {
+                const items = mission.data.items
+                    .filter(item => item.target === target.id)
+                    .map(item => `<span class="review-pill">${item.label}</span>`)
+                    .join('');
+                return `<section><h4>${target.label}</h4><div class="review-pill-row">${items}</div></section>`;
+            }).join('');
+            content.innerHTML = groups;
+        }
+
+        if (mission.format === 'matching') {
+            content.innerHTML = mission.data.pairs
+                .map(pair => `<p><strong>${pair.left}</strong> ${pair.right}</p>`)
+                .join('');
+        }
+
+        if (mission.format === 'truefalse') {
+            content.innerHTML = mission.data
+                .map(item => `<p><strong>${item.answer ? 'Richtig' : 'Falsch'}:</strong> ${item.statement}<br><span>${item.explanation}</span></p>`)
+                .join('');
+        }
+
+        if (mission.format === 'sorting') {
+            const byId = Object.fromEntries(mission.data.items.map(item => [item.id, item.label]));
+            content.innerHTML = `<ol>${mission.data.correctOrder.map(id => `<li>${byId[id]}</li>`).join('')}</ol>`;
+        }
+
+        if (mission.format === 'singlechoice') {
+            content.innerHTML = mission.data
+                .map(q => `<p><strong>${q.question}</strong><br>${q.options[q.correct]}<br><span>${q.explanation}</span></p>`)
+                .join('');
+        }
+
+        if (mission.format === 'multiplechoice') {
+            content.innerHTML = mission.data
+                .map(q => {
+                    const correct = q.options.filter(option => option.correct).map(option => `<span class="review-pill">${option.text}</span>`).join('');
+                    return `<section><h4>${q.question}</h4><div class="review-pill-row">${correct}</div></section>`;
+                })
+                .join('');
+        }
+
+        if (mission.format === 'scenario') {
+            const byId = Object.fromEntries(mission.data.steps.map(step => [step.id, step.label]));
+            content.innerHTML = `<ol>${mission.data.correctOrder.map(id => `<li>${byId[id]}</li>`).join('')}</ol>`;
+        }
+
+        if (mission.format === 'cloze') {
+            content.innerHTML = `<p>${mission.data.segments.map(segment => {
+                if (typeof segment === 'string') return segment;
+                return `<span class="review-pill">${segment.correct}</span>`;
+            }).join('')}</p>`;
+        }
+
+        const success = document.createElement('p');
+        success.className = 'mission-review-success';
+        success.textContent = mission.success;
+        review.append(content, success);
+        area.appendChild(review);
     }
 
     // --- ASSIGNMENT ---
